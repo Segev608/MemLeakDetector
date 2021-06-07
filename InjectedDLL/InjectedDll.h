@@ -12,6 +12,7 @@
 #include<conio.h>
 #include<iostream>
 #include <string>
+using namespace std;
 
 #define INJECTDLL_EXPORTS 1
 
@@ -21,19 +22,24 @@
 #define INJECTDLL_API __declspec(dllimport)
 #endif
 
+extern "C" __declspec(dllexport) void dummy(void) { return; }
+#define IMPORT_TABLE_OFFSET 1
+
 #define TARGET_ALLOCATION "malloc"
 #define TARGET_DEALLOCATION "free"
+#define TARGET_REALLOCATION "realloc"
 
-#define IMPORT_TABLE_OFFSET 1
-using namespace std;
+typedef PVOID(CDECL* MemAlloc)(size_t);
+typedef VOID(CDECL* MemFree)(PVOID);
+typedef PVOID(CDECL* MemRealloc)(PVOID, size_t);
 
-extern "C" __declspec(dllexport) void dummy(void) { return; }
-
-PVOID CDECL new_malloc(size_t _Size);
+PVOID CDECL new_alloc(size_t _Size);
 VOID CDECL new_free(PVOID _Size);
+PVOID CDECL new_realloc(PVOID, size_t);
 
-bool IAThooking(HMODULE, LPCSTR, PVOID);
-bool rewriteThunk(PIMAGE_THUNK_DATA pThunk, void* newFunc);
+template<class... Args>
+void log_file(const char*, Args...);
+bool IAThooking(HMODULE);
 PIMAGE_IMPORT_DESCRIPTOR getImportTable(HMODULE);
 BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved);
 
