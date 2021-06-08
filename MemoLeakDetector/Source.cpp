@@ -15,11 +15,13 @@ bool is_x64(char*);
 void show_usage(string);
 void parse_args(int, char**);
 void handle_output_path();
-#include <exception>
+
 int main(int argc, char** argv)
 {
-    parse_args(argc, argv);
-    
+    //parse_args(argc, argv);
+    exe = (char*)"..\\Debug\\TestSamples.exe";
+    handle_output_path();
+
     HANDLE hp = run_exe();
 
     WaitForSingleObject(hp, INFINITE);

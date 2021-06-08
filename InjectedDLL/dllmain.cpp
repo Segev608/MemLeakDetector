@@ -1,12 +1,52 @@
 
 #include "pch.h"
 #include "InjectedDll.h"
+#pragma warning(push)
+#pragma warning(disable : 4091)
+#include "DbgHelp.h"
+#pragma comment(lib, "DbgHelp.lib")
+#pragma warning(pop)
 
 MemAlloc origin_alloc = nullptr;
 MemFree origin_free = nullptr;
 MemRealloc origin_realloc = nullptr;
 
 ofstream file;
+
+void printStack(void)
+{
+	static const int MAX_STACK_COUNT = 64;
+	void* stack[MAX_STACK_COUNT];
+	unsigned short frames;
+	SYMBOL_INFO* symbol;
+	HANDLE process;
+
+	process = GetCurrentProcess();
+
+	SymInitialize(process, NULL, TRUE);
+
+	frames = CaptureStackBackTrace(0, 100, stack, NULL);
+	symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
+	symbol->MaxNameLen = 255;
+	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+
+	IMAGEHLP_LINE64* line;
+	line = (IMAGEHLP_LINE64*)malloc(sizeof(IMAGEHLP_LINE64));
+	line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+
+	printf("=========call stack==========\n");
+	for (int i = 1; i < frames; i++)
+	{
+		SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol);
+		DWORD disp;
+		SymGetLineFromAddr64(process, symbol->Address, &disp, line)
+
+		printf("%i: %s - 0x%0llX\n", frames - i - 1, symbol->Name, symbol->Address);
+	}
+	printf("=============================\n");
+
+	free(symbol);
+}
 
 BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 {
@@ -102,6 +142,7 @@ bool IAThooking(HMODULE hInstance)
 }
 
 PVOID CDECL new_alloc(size_t _Size) {
+	printStack();
 	void* p = origin_alloc(_Size);
 	log_file("MALLOC\t%p\t%zu\n", p, _Size);
 	return p;
