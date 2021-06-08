@@ -13,54 +13,67 @@ MemRealloc origin_realloc = nullptr;
 
 ofstream file;
 
-void printStack(void)
+SYMBOL_INFO* symbol; 
+IMAGEHLP_LINE64* line;
+
+char* get_last_call_info(int back = 1)
 {
-	static const int MAX_STACK_COUNT = 64;
+	const int MAX_STACK_COUNT = 64;
+	const int BUFFER_SIZE = 256;
 	void* stack[MAX_STACK_COUNT];
 	unsigned short frames;
-	SYMBOL_INFO* symbol;
+	char mod[BUFFER_SIZE]{ 0 };
+	;
 	HANDLE process;
+	
+	HMODULE hModule = NULL;
+	DWORD disp;
 
 	process = GetCurrentProcess();
+
+	ZeroMemory(symbol, sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+	symbol->MaxNameLen = BUFFER_SIZE - 1;
+	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+
+	ZeroMemory(line, sizeof(IMAGEHLP_LINE64));
+	line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 
 	// Initialize all debug information from executable (PE)
 	SymInitialize(process, NULL, TRUE);
 
 	// "Pull" 20 frames from the stack trace
-	frames = CaptureStackBackTrace(0, 20, stack, NULL);
-	cout << frames << '\n';
-	for (int i = 0; i < 20; ++i)
-		cout << stack[i] << '\n';
+	frames = CaptureStackBackTrace(0, MAX_STACK_COUNT, stack, NULL);
+	if (frames < back + 1)
+		return (char*)"";
 
-	symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
-	symbol->MaxNameLen = 255;
-	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+	// get symbol from address
+	if (!SymFromAddr(process, (DWORD64)(stack[back]), 0, symbol))
+		return (char*)"";
 
-	IMAGEHLP_LINE64* line;
-	line = (IMAGEHLP_LINE64*)malloc(sizeof(IMAGEHLP_LINE64));
-	line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-	HMODULE hModule;
+	// module name
+	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+		(LPCTSTR)(symbol->Address), &hModule);
+	if (hModule != NULL)
+		GetModuleFileNameA(hModule, mod, BUFFER_SIZE);
 
-
-	printf("=========call stack==========\n");
-	for (int i = 0; i < 20; i++)
-	{
-		char mod[256]{ 0 };
-
-		// get symbol from address
-		SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol);
-		DWORD disp;
-		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-			(LPCTSTR)(symbol->Address), &hModule);
-		if (hModule != NULL)GetModuleFileNameA(hModule, mod, 256);
-		if (SymGetLineFromAddr64(process, symbol->Address, &disp, line))
-			printf("%i: (%s)%s(%d)(%s) - 0x%0llX\n", frames - i - 1, line->FileName, symbol->Name, line->LineNumber, mod, symbol->Address);
-		else
-			printf("%i: %s - 0x%0llX\n", frames - i - 1, symbol->Name, symbol->Address);
+	// line number
+	if (!SymGetLineFromAddr64(process, symbol->Address, &disp, line)) {
+		free(line);
+		line = NULL;
 	}
-	printf("=============================\n");
+	
+	char ret[1000];
+	sprintf_s(ret, "%s|%0llX|%s|%d|%s",
+		symbol->Name, 
+		symbol->Address,
+		line != NULL ? line->FileName : "NULL",
+		line != NULL ? line->LineNumber : 0,
+		hModule != NULL ? mod : "NULL");
 
-	free(symbol);
+	//free(symbol);
+	//if (line) free(line);
+
+	return ret;
 }
 
 BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
@@ -73,7 +86,8 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 	{
 	case DLL_PROCESS_ATTACH:
 		DetourRestoreAfterWith();
-
+		symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+		line = (IMAGEHLP_LINE64*)malloc(sizeof(IMAGEHLP_LINE64));
 		getenv_s(&s, buf, "MEMCHECK_PATH");
 		file.open(buf, ofstream::trunc);
 
@@ -93,7 +107,8 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 		else
 			printf("undetoured unsuccessfully\n");
 		file.close();
-
+		free(symbol);
+		free(line);
 		break;
 	case DLL_THREAD_ATTACH:
 		break;
@@ -157,8 +172,9 @@ bool IAThooking(HMODULE hInstance)
 }
 
 PVOID CDECL new_alloc(size_t _Size) {
-	printStack();
+	
 	void* p = origin_alloc(_Size);
+	
 	log_file("MALLOC\t%p\t%zu\n", p, _Size);
 	return p;
 }
@@ -178,9 +194,10 @@ PVOID CDECL new_realloc(PVOID ptr, size_t s)
 template<class... Args>
 void log_file(const char* fmt, Args... args)
 {
+	char* lc = get_last_call_info(3);
 	char output[256];
 	sprintf_s(output, 256, fmt, args...);
-	file << output;
+	file << output << lc << '\n';
 }
 
 PIMAGE_IMPORT_DESCRIPTOR getImportTable(HMODULE hInstance)

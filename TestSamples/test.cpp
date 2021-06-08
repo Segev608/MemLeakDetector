@@ -2,6 +2,7 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <Windows.h>
+#include <detours.h>
 #include <iostream>
 #include <stdlib.h>
 #pragma warning(push)
@@ -189,6 +190,14 @@ bool IAThooking(HMODULE hInstance)
 #endif
 
 
+
+
+
+void foo() {
+	void *x = malloc(10);
+	x = realloc(x, 100);
+	free(x);
+}
 int main() {
 #if Debug == 1
 	file.open("C:\\diagnostic.txt", ofstream::trunc);
@@ -198,6 +207,7 @@ int main() {
 	file << "START\n";
 #endif
 	// =================== CODE =====================
+	foo();
 #if Debug == 1
 	//fprintf(file, "END\n");
 	file << "END\n";

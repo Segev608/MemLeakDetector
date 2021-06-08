@@ -1,4 +1,14 @@
 START
-MALLOC	02589CD8	365
+MALLOC	00C319C0	10
+foo|521810|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\TestSamples\test.cpp|196|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\Debug\TestSamples.exe
+REALLOC	00C319C0	100	00D1B180
+foo|521810|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\TestSamples\test.cpp|196|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\Debug\TestSamples.exe
+FREE	00D1B180
+foo|521810|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\TestSamples\test.cpp|196|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\Debug\TestSamples.exe
 END
-MALLOC	010EE548	24
+MALLOC	00C30308	24
+operator new|7CA06D00|d:\agent\_work\57\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\Debug\InjectedDLL.dll
+MALLOC	00D1EC00	24
+operator new|7CA06D00|d:\agent\_work\57\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\Debug\InjectedDLL.dll
+MALLOC	00D1EA08	24
+operator new|7CA06D00|d:\agent\_work\57\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\Debug\InjectedDLL.dll

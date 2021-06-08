@@ -19,6 +19,7 @@ void handle_output_path();
 
 int main(int argc, char** argv)
 {
+
     //parse_args(argc, argv);
     exe = (char*)"..\\Debug\\TestSamples.exe";
     handle_output_path();
