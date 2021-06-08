@@ -188,62 +188,6 @@ bool IAThooking(HMODULE hInstance)
 }
 #endif
 
-void printStack(void)
-{
-	static const int MAX_STACK_COUNT = 64;
-	void* stack[MAX_STACK_COUNT];
-	unsigned short frames;
-	SYMBOL_INFO* symbol;
-	HANDLE process;
-
-	process = GetCurrentProcess();
-
-	SymInitialize(process, NULL, TRUE);
-
-	frames = CaptureStackBackTrace(0, 20, stack, NULL);
-	cout << frames << '\n';
-	for (int i = 0; i < 20; ++i)
-		cout << stack[i] << '\n';
-
-	symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
-	symbol->MaxNameLen = 255;
-	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-
-	IMAGEHLP_LINE64* line;
-	line = (IMAGEHLP_LINE64*)malloc(sizeof(IMAGEHLP_LINE64));
-	line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-	HMODULE hModule;
-	
-
-	printf("=========call stack==========\n");
-	for (int i = 0; i < 20; i++)
-	{
-		char mod[256]{ 0 };
-		SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol);
-		DWORD disp;
-		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-			(LPCTSTR)(symbol->Address), &hModule);
-		if (hModule != NULL)GetModuleFileNameA(hModule, mod, 256);
-		if (SymGetLineFromAddr64(process, symbol->Address, &disp, line))
-			printf("%i: (%s)%s(%d)(%s) - 0x%0llX\n", frames - i - 1, line->FileName,symbol->Name, line->LineNumber, mod,symbol->Address);
-		else
-			printf("%i: %s - 0x%0llX\n", frames - i - 1, symbol->Name, symbol->Address);
-	}
-	printf("=============================\n");
-
-	free(symbol);
-}
-
-void* bar() {
-	cout << "asdf\n";
-	printStack();
-	return malloc(365);
-}
-
-void foo() {
-	bar();
-	cout << "Foo\n";
-}
 
 int main() {
 #if Debug == 1
@@ -254,7 +198,6 @@ int main() {
 	file << "START\n";
 #endif
 	// =================== CODE =====================
-	foo();
 #if Debug == 1
 	//fprintf(file, "END\n");
 	file << "END\n";

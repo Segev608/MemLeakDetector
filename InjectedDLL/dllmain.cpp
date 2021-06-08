@@ -23,9 +23,15 @@ void printStack(void)
 
 	process = GetCurrentProcess();
 
+	// Initialize all debug information from executable (PE)
 	SymInitialize(process, NULL, TRUE);
 
-	frames = CaptureStackBackTrace(0, 100, stack, NULL);
+	// "Pull" 20 frames from the stack trace
+	frames = CaptureStackBackTrace(0, 20, stack, NULL);
+	cout << frames << '\n';
+	for (int i = 0; i < 20; ++i)
+		cout << stack[i] << '\n';
+
 	symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char), 1);
 	symbol->MaxNameLen = 255;
 	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
@@ -33,15 +39,24 @@ void printStack(void)
 	IMAGEHLP_LINE64* line;
 	line = (IMAGEHLP_LINE64*)malloc(sizeof(IMAGEHLP_LINE64));
 	line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+	HMODULE hModule;
+
 
 	printf("=========call stack==========\n");
-	for (int i = 1; i < frames; i++)
+	for (int i = 0; i < 20; i++)
 	{
+		char mod[256]{ 0 };
+
+		// get symbol from address
 		SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol);
 		DWORD disp;
-		SymGetLineFromAddr64(process, symbol->Address, &disp, line)
-
-		printf("%i: %s - 0x%0llX\n", frames - i - 1, symbol->Name, symbol->Address);
+		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			(LPCTSTR)(symbol->Address), &hModule);
+		if (hModule != NULL)GetModuleFileNameA(hModule, mod, 256);
+		if (SymGetLineFromAddr64(process, symbol->Address, &disp, line))
+			printf("%i: (%s)%s(%d)(%s) - 0x%0llX\n", frames - i - 1, line->FileName, symbol->Name, line->LineNumber, mod, symbol->Address);
+		else
+			printf("%i: %s - 0x%0llX\n", frames - i - 1, symbol->Name, symbol->Address);
 	}
 	printf("=============================\n");
 

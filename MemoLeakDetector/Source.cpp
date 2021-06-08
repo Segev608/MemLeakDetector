@@ -8,6 +8,7 @@ using namespace std;
 bool output_flag = false;
 char* output = (char*)"diagnostic.txt";
 char* exe = nullptr;
+bool debug = false;
 
 HANDLE run_exe();
 LPTSTR get_exe();
@@ -127,7 +128,8 @@ void show_usage(std::string name)
     std::cerr << "Usage: " << name << " <options> EXECUTABLE\n"
         << "Options:\n"
         << "\t-h, --help\t\tShow this help message\n"
-        << "\t-o, --output OUTPUT\tSpecify the output path"
+        << "\t-o, --output OUTPUT\tSpecify the output path\n"
+        << "\t-d, --debug executable compiled in DEBUG mode. retraive more information"
         << std::endl;
     exit(0);
 }
@@ -151,6 +153,9 @@ void parse_args(int argc, char** argv)
                 output = argv[++i];
 				output_flag = true;
             }
+        }
+        else if (((arg == "-d") || (arg == "--debug"))) {
+            debug = true;
         }
         else {
             if (i == argc - 1)
