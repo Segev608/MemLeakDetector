@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #define WIN32_LEAN_AND_MEAN
 
 #include <Windows.h>
@@ -11,6 +10,7 @@
 #pragma comment(lib, "DbgHelp.lib")
 #pragma warning(pop)
 using namespace std;
+
 
 #define Debug 0
 #if Debug == 1
@@ -188,10 +188,6 @@ bool IAThooking(HMODULE hInstance)
 	return false;
 }
 #endif
-
-
-
-
 
 void foo() {
 	void *x = malloc(10);

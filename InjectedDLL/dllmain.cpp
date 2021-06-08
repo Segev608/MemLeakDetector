@@ -187,7 +187,7 @@ VOID CDECL new_free(PVOID ptr) {
 PVOID CDECL new_realloc(PVOID ptr, size_t s)
 {
 	void* ret = origin_realloc(ptr, s);
-	log_file("REALLOC\t%p\t%zu\t%p\r\n", ptr, s, ret);
+	log_file("REALLOC\t%p\t%zu\t%p\n", ptr, s, ret);
 	return ret;
 }
 

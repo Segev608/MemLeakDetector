@@ -1,8 +1,20 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <iostream>
 #include <windows.h>
 #include <fstream>
 #include <detours.h>
 using namespace std;
+
+#define _RED		12
+#define _YELLOW		14
+#define _GREEN		10
+#define _BLUE		9	
+#define _DEFAULT	7
+
+HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+void restoreAttribute();
+void colorful_output(const char* out, const int color);
 
 // options declerations
 bool output_flag = false;
@@ -16,6 +28,7 @@ bool is_x64(char*);
 void show_usage(string);
 void parse_args(int, char**);
 void handle_output_path();
+void parse(const char* path);
 
 int main(int argc, char** argv)
 {
@@ -39,31 +52,61 @@ int main(int argc, char** argv)
     while (strcmp(line, "START") != 0)
         ofile.getline(line, 256);
 
+    bool details = false;
+    char addr[9];
+    int sz;
+    char new_addr[9];
+    int new_size;
+
+    string token;
+    size_t position;
+
+    string tokens[5];
+
     while (ofile >> func)
     {
-        if (func == "END")
-            break;
-
-        char addr[9];
-        if (func == "MALLOC") {
-            int sz;
-            ofile >> addr >> sz;
-
-            cout << func << ' ' << addr << ' ' << sz << '\n';
-            //handle malloc
+        if (!details) {
+            if (func == "END")
+                break;
+            if (func == "MALLOC") {
+                ofile >> addr >> sz;
+                colorful_output("[+]<malloc> ", _RED);
+                printf("0x%s -->\t%d\n", addr, sz);
+            }
+            else if (func == "FREE") {
+                ofile >> addr;
+                colorful_output("[-]<free> ", _GREEN);
+                printf("0x%s\n", addr);
+            }
+            else if (func == "REALLOC") {
+                ofile >> addr >> new_size >> new_addr;
+                colorful_output("[+]<realloc> ", _RED);                
+                printf("0x%s -->\t0x%s, %d\n", addr, new_addr, new_size);
+            }
         }
-        else if (func == "FREE") {
-            ofile >> addr;
-            cout << func << ' ' << addr << '\n';
-            //handle free
+        else {
+            if (func != "") {
+                for (int i = 0; i < 5; i++) {
+                    position = func.find("|");
+                    if (position == string::npos) {
+                        tokens[i] = func;
+                        break;
+                    }
+                    tokens[i] = func.substr(0, position);
+                    func.erase(0, position + 1);
+                }
+                cout << "\t" << "- function: "  << tokens[0] << endl;
+                cout << "\t" << "- address: 0x"   << tokens[1] << endl;
+                cout << "\t" << "- location: "  << tokens[2] << endl;
+                cout << "\t" << "- line: "      << tokens[3] << endl;
+                cout << "\t" << "- module: "    << tokens[4] << endl;
+                cout << "\n";
+            }
+            for (int i = 0; i < 5; i++) {
+                tokens[i].clear();
+            }
         }
-        else if (func == "REALLOC") {
-            int new_size;
-            char new_addr[9];
-            ofile >> addr >> new_size >> new_addr;
-            cout << func << ' ' << addr << ' ' << new_size << ' ' << new_addr << '\n';
-            //handle realloc
-        }
+        details = !details;
     }
 
 	return 0;
@@ -171,4 +214,14 @@ void parse_args(int argc, char** argv)
         cout << "Executable must be given\n";
         show_usage(argv[0]);
     }
+}
+
+void restoreAttribute() {
+    SetConsoleTextAttribute(hConsole, _DEFAULT);
+}
+
+void colorful_output(const char* out, const int color) {
+    SetConsoleTextAttribute(hConsole, color);
+    cout << out;
+    restoreAttribute();
 }
