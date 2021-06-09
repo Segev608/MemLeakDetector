@@ -1,14 +1,14 @@
 START
-MALLOC	00C91FA0	10
-foo|2E1820|C:\Users\User\source\repos\MemLeakDetector\TestSamples\test.cpp|192|C:\Users\User\source\repos\MemLeakDetector\Debug\TestSamples.exe
-REALLOC	00C91FA0	100	00D5DDA0
-foo|2E1820|C:\Users\User\source\repos\MemLeakDetector\TestSamples\test.cpp|192|C:\Users\User\source\repos\MemLeakDetector\Debug\TestSamples.exe
-FREE	00D5DDA0
-foo|2E1820|C:\Users\User\source\repos\MemLeakDetector\TestSamples\test.cpp|192|C:\Users\User\source\repos\MemLeakDetector\Debug\TestSamples.exe
+MALLOC	015622A0	10
+foo|711820|C:\Users\User\source\repos\MemLeakDetector\TestSamples\test.cpp|192|C:\Users\User\source\repos\MemLeakDetector\Debug\TestSamples.exe
+REALLOC	015622A0	100	0164DB90
+foo|711820|C:\Users\User\source\repos\MemLeakDetector\TestSamples\test.cpp|192|C:\Users\User\source\repos\MemLeakDetector\Debug\TestSamples.exe
+FREE	0164DB90
+foo|711820|C:\Users\User\source\repos\MemLeakDetector\TestSamples\test.cpp|192|C:\Users\User\source\repos\MemLeakDetector\Debug\TestSamples.exe
 END
-MALLOC	00D5B090	24
-operator new|79106D00|d:\agent\_work\57\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\User\source\repos\MemLeakDetector\Debug\InjectedDLL.dll
-MALLOC	00D5B0D8	24
-operator new|79106D00|d:\agent\_work\57\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\User\source\repos\MemLeakDetector\Debug\InjectedDLL.dll
-MALLOC	00D5AD78	24
-operator new|79106D00|d:\agent\_work\57\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\User\source\repos\MemLeakDetector\Debug\InjectedDLL.dll
+MALLOC	015D3BA8	24
+operator new|7C256D00|d:\agent\_work\57\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\User\source\repos\MemLeakDetector\Debug\InjectedDLL.dll
+MALLOC	015D3E78	24
+operator new|7C256D00|d:\agent\_work\57\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\User\source\repos\MemLeakDetector\Debug\InjectedDLL.dll
+MALLOC	015D3C80	24
+operator new|7C256D00|d:\agent\_work\57\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\User\source\repos\MemLeakDetector\Debug\InjectedDLL.dll

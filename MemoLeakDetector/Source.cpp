@@ -19,7 +19,7 @@ void colorful_output(const char* out, const int color);
 // options declerations
 bool output_flag = false;
 char* output = (char*)"diagnostic.txt";
-char* exe = nullptr;
+char* exe = (char*)"..\\Debug\\TestSamples.exe";
 bool debug = false;
 
 HANDLE run_exe();
@@ -28,26 +28,26 @@ bool is_x64(char*);
 void show_usage(string);
 void parse_args(int, char**);
 void handle_output_path();
-void parse(const char* path);
+void show_details(string args[5]);
+bool parse_headline(ifstream& ofile, const string& row, char(&addr)[9], int& sz, int& new_size, char(&new_addr)[9]);
 
 int main(int argc, char** argv)
 {
 
-    //parse_args(argc, argv);
-    exe = (char*)"..\\Debug\\TestSamples.exe";
+    parse_args(argc, argv);
     handle_output_path();
 
     HANDLE hp = run_exe();
-
     WaitForSingleObject(hp, INFINITE);
+
     // parse file
     ifstream ofile(output);
     if (!ofile) {
         cout << "ERROR";
         exit(0);
     }
+
     string func;
-    
     char line[256] { 0 };
     while (strcmp(line, "START") != 0)
         ofile.getline(line, 256);
@@ -58,31 +58,15 @@ int main(int argc, char** argv)
     char new_addr[9];
     int new_size;
 
-    string token;
     size_t position;
-
     string tokens[5];
+    auto reset = [](string args[5]) {for (int i = 0; i < 5; i++) args[i].clear(); };
 
     while (ofile >> func)
     {
         if (!details) {
-            if (func == "END")
+            if (parse_headline(ofile, func, addr, sz, new_size, new_addr))
                 break;
-            if (func == "MALLOC") {
-                ofile >> addr >> sz;
-                colorful_output("[+]<malloc> ", _RED);
-                printf("0x%s -->\t%d\n", addr, sz);
-            }
-            else if (func == "FREE") {
-                ofile >> addr;
-                colorful_output("[-]<free> ", _GREEN);
-                printf("0x%s\n", addr);
-            }
-            else if (func == "REALLOC") {
-                ofile >> addr >> new_size >> new_addr;
-                colorful_output("[+]<realloc> ", _RED);                
-                printf("0x%s -->\t0x%s, %d\n", addr, new_addr, new_size);
-            }
         }
         else {
             if (func != "") {
@@ -95,16 +79,9 @@ int main(int argc, char** argv)
                     tokens[i] = func.substr(0, position);
                     func.erase(0, position + 1);
                 }
-                cout << "\t" << "- function: "  << tokens[0] << endl;
-                cout << "\t" << "- address: 0x"   << tokens[1] << endl;
-                cout << "\t" << "- location: "  << tokens[2] << endl;
-                cout << "\t" << "- line: "      << tokens[3] << endl;
-                cout << "\t" << "- module: "    << tokens[4] << endl;
-                cout << "\n";
+                show_details(tokens);
             }
-            for (int i = 0; i < 5; i++) {
-                tokens[i].clear();
-            }
+            reset(tokens);
         }
         details = !details;
     }
@@ -180,17 +157,14 @@ void show_usage(std::string name)
 
 void parse_args(int argc, char** argv)
 {
-    if (argc < 2) {
+    if (argc < 2) 
         show_usage(argv[0]);
-    }
 
     //parsing
 	for (int i = 1; i < argc; ++i) {
 		std::string arg = argv[i];
-
-		if ((arg == "-h") || (arg == "--help")) {
+		if ((arg == "-h") || (arg == "--help")) 
 			show_usage(argv[0]);
-		}
 		// options tower
 		else if ((arg == "-o") || (arg == "--output")) {
 			if (i + 1 < argc) {
@@ -224,4 +198,34 @@ void colorful_output(const char* out, const int color) {
     SetConsoleTextAttribute(hConsole, color);
     cout << out;
     restoreAttribute();
+}
+
+void show_details(string args[5]) {
+    cout << "\t" << "- function: "  << args[0] << endl;
+    cout << "\t" << "- address: 0x" << args[1] << endl;
+    cout << "\t" << "- location: "  << args[2] << endl;
+    cout << "\t" << "- line: "      << args[3] << endl;
+    cout << "\t" << "- module: "    << args[4] << endl;
+    cout << "\n";
+}
+
+bool parse_headline(ifstream& ofile, const string& row, char (&addr)[9], int& sz, int& new_size, char (&new_addr)[9]) {
+    if (row == "END")
+        return true;
+    if (row == "MALLOC") {
+        ofile >> addr >> sz;
+        colorful_output("[+]<malloc> ", _RED);
+        printf("0x%s --> %d\n", addr, sz);
+    }
+    else if (row == "FREE") {
+        ofile >> addr;
+        colorful_output("[-]<free> ", _GREEN);
+        printf("0x%s\n", addr);
+    }
+    else if (row == "REALLOC") {
+        ofile >> addr >> new_size >> new_addr;
+        colorful_output("[+]<realloc> ", _RED);
+        printf("0x%s --> 0x%s, %d\n", addr, new_addr, new_size);
+    }
+    return false;
 }
