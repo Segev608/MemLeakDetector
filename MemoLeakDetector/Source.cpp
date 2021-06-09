@@ -29,7 +29,7 @@ void show_usage(string);
 void parse_args(int, char**);
 void handle_output_path();
 void show_details(string args[5]);
-bool parse_headline(ifstream& ofile, const string& row, char(&addr)[9], int& sz, int& new_size, char(&new_addr)[9]);
+bool parse_block(ifstream& ofile, const string& row, char(&addr)[9], int& sz, int& new_size, char(&new_addr)[9]);
 
 int main(int argc, char** argv)
 {
@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     while (ofile >> func)
     {
         if (!details) {
-            if (parse_headline(ofile, func, addr, sz, new_size, new_addr))
+            if (parse_block(ofile, func, addr, sz, new_size, new_addr))
                 break;
         }
         else {
@@ -209,7 +209,7 @@ void show_details(string args[5]) {
     cout << "\n";
 }
 
-bool parse_headline(ifstream& ofile, const string& row, char (&addr)[9], int& sz, int& new_size, char (&new_addr)[9]) {
+bool parse_block(ifstream& ofile, const string& row, char (&addr)[9], int& sz, int& new_size, char (&new_addr)[9]) {
     if (row == "END")
         return true;
     if (row == "MALLOC") {
