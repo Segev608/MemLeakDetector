@@ -1,7 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 
 #include <Windows.h>
-#include <detours.h>
 #include <iostream>
 #include <stdlib.h>
 #pragma warning(push)

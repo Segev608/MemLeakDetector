@@ -56,18 +56,14 @@ char* get_last_call_info(int back = 1)
 	if (hModule != NULL)
 		GetModuleFileNameA(hModule, mod, BUFFER_SIZE);
 
-	// line number
-	if (!SymGetLineFromAddr64(process, symbol->Address, &disp, line)) {
-		free(line);
-		line = NULL;
-	}
-	
+	bool line_flag = SymGetLineFromAddr64(process, symbol->Address, &disp, line);
+
 	char ret[1000];
-	sprintf_s(ret, "%s|%0llX|%s|%d|%s",
+	sprintf_s(ret, "%s|%08llX|%s|%d|%s",
 		symbol->Name, 
 		symbol->Address,
-		line != NULL ? line->FileName : "NULL",
-		line != NULL ? line->LineNumber : 0,
+		line_flag ? line->FileName : "NULL",
+		line_flag ? line->LineNumber : 0,
 		hModule != NULL ? mod : "NULL");
 
 	//free(symbol);

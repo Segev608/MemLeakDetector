@@ -19,13 +19,13 @@ void colorful_output(const char* out, const int color);
 // options declerations
 bool output_flag = false;
 char* output = (char*)"diagnostic.txt";
-char* exe = (char*)"..\\Debug\\TestSamples.exe";
+char* exe = nullptr;
 bool debug = false;
 
 HANDLE run_exe();
 LPTSTR get_exe();
 bool is_x64(char*);
-void show_usage(string);
+void show_usage(string, bool is_abort = false);
 void parse_args(int, char**);
 void handle_output_path();
 void show_details(string args[5]);
@@ -34,7 +34,8 @@ bool parse_block(ifstream& ofile, const string& row, char(&addr)[9], int& sz, in
 int main(int argc, char** argv)
 {
 
-    parse_args(argc, argv);
+    //parse_args(argc, argv);
+    exe = (char*)"..\\Debug\\TestSamples.exe";
     handle_output_path();
 
     HANDLE hp = run_exe();
@@ -144,7 +145,7 @@ bool is_x64(char* executable) {
     return res == SCS_64BIT_BINARY;
 }
 
-void show_usage(std::string name)
+void show_usage(std::string name, bool is_abort)
 {
     std::cerr << "Usage: " << name << " <options> EXECUTABLE\n"
         << "Options:\n"
@@ -152,13 +153,14 @@ void show_usage(std::string name)
         << "\t-o, --output OUTPUT\tSpecify the output path\n"
         << "\t-d, --debug executable compiled in DEBUG mode. retraive more information"
         << std::endl;
-    exit(0);
+    if (is_abort)
+        exit(0);
 }
 
 void parse_args(int argc, char** argv)
 {
-    if (argc < 2) 
-        show_usage(argv[0]);
+    //if (argc < 2) 
+    //    show_usage(argv[0]);
 
     //parsing
 	for (int i = 1; i < argc; ++i) {
@@ -182,7 +184,7 @@ void parse_args(int argc, char** argv)
                 show_usage(argv[0]);
         }
     }
-
+    
     handle_output_path();
     if (!exe) {
         cout << "Executable must be given\n";
