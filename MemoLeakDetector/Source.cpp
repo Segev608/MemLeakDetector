@@ -3,6 +3,8 @@
 #include <iostream>
 #include <windows.h>
 #include <fstream>
+#include <vector>
+#include <algorithm>
 #include <detours.h>
 using namespace std;
 
@@ -18,18 +20,39 @@ void colorful_output(const char* out, const int color);
 
 // options declerations
 bool output_flag = false;
-char* output = (char*)"diagnostic.txt";
+char* output = (char*)"C:\\diagnostic.txt";
 char* exe = nullptr;
 bool debug = false;
 
+int total_allocs = 0;
+int total_frees = 0;
+int total_reallocs = 0;
+int total_bytes = 0;
+
+struct Call {
+    string method;
+    string address;
+    size_t _size = 0;
+    string last_address;
+    string caller;
+    string caller_addr;
+    size_t caller_line = 0;
+    string file;
+    string _module;
+};
+
+void anal(ifstream& ofile);
+vector<string> split(string s, char t);
 HANDLE run_exe();
 LPTSTR get_exe();
 bool is_x64(char*);
 void show_usage(string, bool is_abort = false);
 void parse_args(int, char**);
 void handle_output_path();
-void show_details(string args[5]);
-bool parse_block(ifstream& ofile, const string& row, char(&addr)[9], int& sz, int& new_size, char(&new_addr)[9]);
+void show_details(vector<string> args);
+void new_call(vector<Call>& calls, const Call& call);
+template<class T, class Pred>
+int erase_if(vector<T>& v, Pred pred);
 
 int main(int argc, char** argv)
 {
@@ -40,54 +63,136 @@ int main(int argc, char** argv)
 
     HANDLE hp = run_exe();
     WaitForSingleObject(hp, INFINITE);
-
+    
     // parse file
     ifstream ofile(output);
     if (!ofile) {
         cout << "ERROR";
         exit(0);
     }
+    anal(ofile);
+   
+    return 0;
+}
 
-    string func;
-    char line[256] { 0 };
+void anal(ifstream& ofile) {
+    char line[256]{ 0 };
     while (strcmp(line, "START") != 0)
         ofile.getline(line, 256);
 
-    bool details = false;
+    string func;
     char addr[9];
     int sz;
-    char new_addr[9];
+    char old_addr[9];
     int new_size;
 
-    size_t position;
-    string tokens[5];
-    auto reset = [](string args[5]) {for (int i = 0; i < 5; i++) args[i].clear(); };
+    vector<Call> calls;
 
     while (ofile >> func)
     {
-        if (!details) {
-            if (parse_block(ofile, func, addr, sz, new_size, new_addr))
-                break;
+        if (func == "END")
+            break;
+        Call c;
+        c.method = func.c_str();
+
+        if (func == "MALLOC") {
+            ofile >> addr >> sz;
+            c._size = sz;
         }
-        else {
-            if (func != "") {
-                for (int i = 0; i < 5; i++) {
-                    position = func.find("|");
-                    if (position == string::npos) {
-                        tokens[i] = func;
-                        break;
-                    }
-                    tokens[i] = func.substr(0, position);
-                    func.erase(0, position + 1);
-                }
-                show_details(tokens);
-            }
-            reset(tokens);
+        else if (func == "FREE") {
+            ofile >> addr;
         }
-        details = !details;
+        else if (func == "REALLOC") {
+            ofile >> old_addr >> new_size >> addr;
+            c.last_address = old_addr;
+            c._size = new_size;
+        }
+        c.address = addr;
+
+        char buf[1000]{ 0 };
+        ofile.get();
+        ofile.getline(buf, 1000);
+
+        if (!buf[0])
+            continue;
+
+        auto result = split(string(buf), '|');
+
+        c.caller = result[0];
+        c.caller_addr = result[1];
+        c.file = result[2] == "NULL" ? "" : result[2];
+        c.caller_line = atoi(result[3].c_str());
+        c._module = result[4] == "NULL" ? "" : result[4];
+
+        
+        //anal
+        new_call(calls, c);
+    }
+    
+    int lost_bytes = 0;
+    for (int i = 0; i < calls.size(); ++i) {
+        lost_bytes += calls[i]._size;
+        printf("%d bytes are lost in loss record %d of %d\n", calls[i]._size, i + 1, calls.size());
+        const char* file_name = strrchr(calls[i].file.c_str(), '\\');
+        printf("\tat 0x%s: %s (%s:%d)\n", calls[i].caller_addr.c_str(), calls[i].caller.c_str(), file_name + 1, calls[i].caller_line);
     }
 
-	return 0;
+    cout << "\nHEAP SUMMARY:\n";
+    printf("\tin use at exit: %d bytes\n", lost_bytes);
+    printf("\ttotal heap usage: %d allocs, %d frees, %d reallocs.\n", total_allocs, total_frees, total_reallocs);
+    printf("\t%d bytes allocated\n", total_bytes);
+}
+
+void new_call(vector<Call>& calls, const Call& call)
+{
+    if (call.method == "MALLOC") {
+        auto end = find_if(calls.begin(), calls.end(), [call](Call c) {
+            char* p;
+            long orig_addr = strtol(c.address.c_str(), &p, 16);
+            long new_addr = strtol(call.address.c_str(), &p, 16);
+            return orig_addr <= new_addr && new_addr < orig_addr + c._size;
+        });
+        if (end != calls.end()) {
+            cout << "memory collision\n";
+            // problem
+        }
+        else {
+            total_allocs++;
+            total_bytes += call._size;
+            calls.push_back(call);
+        }
+    }
+    else if (call.method == "FREE") {
+        char* p;
+        long addr = strtol(call.address.c_str(), &p, 16);
+        if (addr == 0) {
+            cout << "freed null pointer\n";
+            //freed null pointer
+        }
+        else {
+            int del = erase_if(calls,
+                [call](Call c) { return c.address == call.address; });
+            if (del == 0) {
+                cout << "freed non-existing pointer\n";
+                // problem 
+            }
+            total_frees++;
+        }
+    }
+    else if (call.method == "REALLOC") {
+        int del = erase_if(calls, 
+            [call](Call c) { return c.address == call.last_address; });
+        if (del == 0) {
+            cout << "reallocated non-existing pointer\n";
+            // problem 
+        }
+        else {
+            calls.push_back(call);
+            total_reallocs++;
+            total_bytes += call._size;
+        }
+    }
+
 }
 
 void handle_output_path() {
@@ -202,7 +307,7 @@ void colorful_output(const char* out, const int color) {
     restoreAttribute();
 }
 
-void show_details(string args[5]) {
+void show_details(vector<string> args) {
     cout << "\t" << "- function: "  << args[0] << endl;
     cout << "\t" << "- address: 0x" << args[1] << endl;
     cout << "\t" << "- location: "  << args[2] << endl;
@@ -211,23 +316,27 @@ void show_details(string args[5]) {
     cout << "\n";
 }
 
-bool parse_block(ifstream& ofile, const string& row, char (&addr)[9], int& sz, int& new_size, char (&new_addr)[9]) {
-    if (row == "END")
-        return true;
-    if (row == "MALLOC") {
-        ofile >> addr >> sz;
-        colorful_output("[+]<malloc> ", _RED);
-        printf("0x%s --> %d\n", addr, sz);
-    }
-    else if (row == "FREE") {
-        ofile >> addr;
-        colorful_output("[-]<free> ", _GREEN);
-        printf("0x%s\n", addr);
-    }
-    else if (row == "REALLOC") {
-        ofile >> addr >> new_size >> new_addr;
-        colorful_output("[+]<realloc> ", _RED);
-        printf("0x%s --> 0x%s, %d\n", addr, new_addr, new_size);
-    }
-    return false;
+vector<string> split(string s, char t) {
+    size_t position = 0;
+    vector<string> ret;
+    do {
+        position = s.find(t);
+        ret.push_back(s.substr(0, position));
+        s.erase(0, position + 1);
+    } while (position != string::npos);
+    
+
+    return ret;
+}
+
+template<class T, class Pred>
+int erase_if(vector<T>& v, Pred pred) {
+    int old_size = v.size();
+    auto new_end = remove_if(v.begin(), v.end(), pred);
+    v.erase(new_end, v.end());
+    return old_size - v.size();
+}
+
+void print_results() {
+
 }

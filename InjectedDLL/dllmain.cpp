@@ -23,7 +23,7 @@ char* get_last_call_info(int back = 1)
 	void* stack[MAX_STACK_COUNT];
 	unsigned short frames;
 	char mod[BUFFER_SIZE]{ 0 };
-	;
+	bool line_flag = false;
 	HANDLE process;
 	
 	HMODULE hModule = NULL;
@@ -56,7 +56,7 @@ char* get_last_call_info(int back = 1)
 	if (hModule != NULL)
 		GetModuleFileNameA(hModule, mod, BUFFER_SIZE);
 
-	bool line_flag = SymGetLineFromAddr64(process, symbol->Address, &disp, line);
+	line_flag = SymGetLineFromAddr64(process, symbol->Address, &disp, line);
 
 	char ret[1000];
 	sprintf_s(ret, "%s|%08llX|%s|%d|%s",
