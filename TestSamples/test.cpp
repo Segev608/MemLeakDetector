@@ -191,6 +191,7 @@ bool IAThooking(HMODULE hInstance)
 void foo() {
 	void *x = malloc(10);
 	x = realloc(x, 100);
+	free(x);
 }
 int main() {
 #if Debug == 1
@@ -204,10 +205,8 @@ int main() {
 
 
 	// =================== CODE =====================
-	foo();
-
-
-
+	void* p = malloc(20);
+	free(nullptr);
 #if Debug == 1
 	//fprintf(file, "END\n");
 	file << "END\n";

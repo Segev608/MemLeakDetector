@@ -98,10 +98,10 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 		if (origin_free)	DetourDetach(&(PVOID&)origin_free, new_free);
 		if (origin_realloc) DetourDetach(&(PVOID&)origin_realloc, new_realloc);
 
-		if (DetourTransactionCommit() == NO_ERROR)
-			printf("undetoured successfully\n");
-		else
-			printf("undetoured unsuccessfully\n");
+		if (DetourTransactionCommit() == NO_ERROR);
+		//	printf("undetoured successfully\n");
+		//else
+		//	printf("undetoured unsuccessfully\n");
 		file.close();
 		free(symbol);
 		free(line);
@@ -159,10 +159,10 @@ bool IAThooking(HMODULE hInstance)
 		importedModule++; //next module (DLL)
 	}
 
-	if (DetourTransactionCommit() == NO_ERROR)
-		printf("detoured successfully\n");
-	else
-		printf("detoured un-successfully\n");
+	if (DetourTransactionCommit() == NO_ERROR);
+	//	printf("detoured successfully\n");
+	//else
+	//	printf("detoured un-successfully\n");
 
 	return false;
 }
