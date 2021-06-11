@@ -17,16 +17,16 @@ using namespace std;
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 // TODO ? :
-// - see line 320
+// - support for release (DONE - need to test)
 // - support x86/x64
 // - get full call stack (until main)
 // - hook new/new[] and delete/delete[] (support for c++)
 
 // options declerations
-bool output_flag = false;
-char* output = (char*)"C:\\Users\\User\\Desktop\\diagnostic.txt";
+bool output_flag = true;
+char* output = (char*)"C:\\diagnostic.txt";
 char* exe = nullptr;
-bool verbose = false;
+bool verbose = true;
 
 int total_allocs = 0;
 int total_frees = 0;
@@ -45,8 +45,19 @@ struct Call {
 	string _module;
 };
 
-enum Flag {_help, _output, _verbose};
-enum MemoryFunction {_malloc, _realloc, _free};
+enum Flag {HELP, OUTPUT, VERBOSE};
+Flag hashStringFlag(string const& str) {
+	if (str == "-h" || str == "--help") return HELP;
+	if (str == "-o" || str == "--output") return OUTPUT;
+	if (str == "-v" || str == "--verbose") return VERBOSE;
+}
+
+enum MemoryFunction {MALLOC, REALLOC, FREE};
+MemoryFunction hashStringFunction(string const& str) {
+	if (str == "MALLOC") return MALLOC;
+	if (str == "REALLOC") return REALLOC;
+	if (str == "FREE") return FREE;
+}
 
 void analyze(ifstream& ofile);
 vector<string> split(string s, char t);
@@ -61,8 +72,6 @@ template<class T, class Pred>
 int erase_if(vector<T>& v, Pred pred);
 void print_results(vector<Call>);
 void colorful_output(const char* out, const int color);
-Flag hashStringFlag(string const& str);
-MemoryFunction hashStringFunction(string const& str);
 
 int main(int argc, char** argv)
 {
@@ -91,11 +100,6 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-MemoryFunction hashStringFunction(string const& str) {
-	if (str == "MALLOC") return _malloc;
-	if (str == "REALLOC") return _realloc;
-	if (str == "FREE") return _free;
-}
 
 void analyze(ifstream& ofile) {
 	char tmp[256]{ 0 };
@@ -113,13 +117,13 @@ void analyze(ifstream& ofile) {
 
 		c.method = func;
 		switch (hashStringFunction(func)) {
-		case _malloc:
+		case MALLOC:
 			ofile >> c.address >> c._size;
 			break;
-		case _realloc:
+		case REALLOC:
 			ofile >> c.last_address >> c._size >> c.address;
 			break;
-		case _free:
+		case FREE:
 			ofile >> c.address;
 			break;
 		}	
@@ -153,7 +157,7 @@ void new_call(vector<Call>& calls, const Call& call)
 	long new_addr;
 	long orig_addr;
 	switch (hashStringFunction(call.method)) {
-	case _malloc:
+	case MALLOC:
 		c_it = find_if(calls.begin(), calls.end(), [&orig_addr, &new_addr, &p, call](Call c) {
 			orig_addr = strtol(c.address.c_str(), &p, 16);
 			new_addr = strtol(call.address.c_str(), &p, 16);
@@ -168,7 +172,7 @@ void new_call(vector<Call>& calls, const Call& call)
 		total_allocs++;
 		total_bytes += call._size;
 		break;
-	case _free:
+	case FREE:
 		addr = strtol(call.address.c_str(), &p, 16);
 		if (addr == 0) {
 			cout << "freed null pointer\n";
@@ -184,7 +188,7 @@ void new_call(vector<Call>& calls, const Call& call)
 		}
 		total_frees++;
 		break;
-	case _realloc:
+	case REALLOC:
 		del = erase_if(calls,
 			[del, call](Call c) { return c.address == call.last_address; });
 		if (del == 0) {
@@ -227,10 +231,7 @@ HANDLE run_exe() {
 		exit(0);
 	}
 
-	ResumeThread(pi.hThread);
-
 	return pi.hProcess;
-	//return ?
 }
 
 LPTSTR get_exe() {
@@ -268,12 +269,6 @@ void show_usage(std::string name)
 	exit(0);
 }
 
-Flag hashStringFlag(string const& str) {
-	if (str == "-h" || str == "--help") return _help;
-	if (str == "-o" || str == "--output") return _output;
-	if (str == "-v" || str == "--verbose") return _verbose;
-}
-
 void parse_args(int argc, char** argv)
 {
 	if (argc < 2)
@@ -284,16 +279,16 @@ void parse_args(int argc, char** argv)
 	for (int i = 1; i < argc; ++i) {
 		std::string arg = argv[i];
 		switch (hashStringFlag(arg)) {
-		case _help:
+		case HELP:
 			show_usage(argv[0]);
 			break;
-		case _output:
+		case OUTPUT:
 			if (i + 1 < argc) {
 				output = argv[++i];
 				output_flag = true;
 			}
 			break;
-		case _verbose:
+		case VERBOSE:
 			verbose = true;
 			break;
 		default:
@@ -346,8 +341,17 @@ void print_results(vector<Call> calls) {
 		if (verbose) {
 			// TODO CHECKS ON GIVEN DATA & OUTPUT ACCORDINGLY
 			printf(" %d bytes are lost in loss record %d of %d\n", calls[i]._size, i + 1, calls.size());
-			const char* file_name = strrchr(calls[i].file.c_str(), '\\');
-			printf("\tat 0x%s: %s (%s:%d)\n", calls[i].caller_addr.c_str(), calls[i].caller.c_str(), file_name + 1, calls[i].caller_line);
+			if (calls[i].caller.empty()) continue;
+			printf("\tat 0x%s: %s ", calls[i].caller_addr.c_str(), calls[i].caller.c_str());
+			if (!calls[i].file.empty()) {
+				char* file_name = (char*)strrchr(calls[i].file.c_str(), '\\');
+				file_name = file_name ? file_name + 1 : (char*)calls[i].file.c_str();
+				printf("(%s:%d)", file_name, calls[i].caller_line);
+			}
+			else if (!calls[i]._module.empty()) {
+				printf("(in %s)", calls[i]._module.c_str());
+			}
+			cout << '\n';
 		}
 	}
 
