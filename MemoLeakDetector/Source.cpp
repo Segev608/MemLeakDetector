@@ -24,7 +24,7 @@ HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 // options declerations
 bool output_flag = false;
-char* output = (char*)"C:\\diagnostic.txt";
+char* output = (char*)"C:\\Users\\User\\Desktop\\diagnostic.txt";
 char* exe = nullptr;
 bool verbose = false;
 
@@ -45,6 +45,9 @@ struct Call {
 	string _module;
 };
 
+enum Flag {_help, _output, _verbose};
+enum MemoryFunction {_malloc, _realloc, _free};
+
 void analyze(ifstream& ofile);
 vector<string> split(string s, char t);
 HANDLE run_exe();
@@ -58,6 +61,8 @@ template<class T, class Pred>
 int erase_if(vector<T>& v, Pred pred);
 void print_results(vector<Call>);
 void colorful_output(const char* out, const int color);
+Flag hashStringFlag(string const& str);
+MemoryFunction hashStringFunction(string const& str);
 
 int main(int argc, char** argv)
 {
@@ -86,6 +91,12 @@ int main(int argc, char** argv)
 	return 0;
 }
 
+MemoryFunction hashStringFunction(string const& str) {
+	if (str == "MALLOC") return _malloc;
+	if (str == "REALLOC") return _realloc;
+	if (str == "FREE") return _free;
+}
+
 void analyze(ifstream& ofile) {
 	char tmp[256]{ 0 };
 	while (strcmp(tmp, "START") != 0)
@@ -94,20 +105,24 @@ void analyze(ifstream& ofile) {
 	string func;
 	string line;
 	vector<Call> calls;
+	Call c;
 
 	while (ofile >> func)
 	{
 		if (func == "END") break;
 
-		Call c;
 		c.method = func;
-
-		if (func == "MALLOC")
+		switch (hashStringFunction(func)) {
+		case _malloc:
 			ofile >> c.address >> c._size;
-		else if (func == "FREE")
-			ofile >> c.address;
-		else if (func == "REALLOC")
+			break;
+		case _realloc:
 			ofile >> c.last_address >> c._size >> c.address;
+			break;
+		case _free:
+			ofile >> c.address;
+			break;
+		}	
 
 		char buf[1000]{ 0 };
 		ofile.get();
@@ -131,14 +146,20 @@ void analyze(ifstream& ofile) {
 
 void new_call(vector<Call>& calls, const Call& call)
 {
-	if (call.method == "MALLOC") {
-		auto end = find_if(calls.begin(), calls.end(), [call](Call c) {
-			char* p;
-			long orig_addr = strtol(c.address.c_str(), &p, 16);
-			long new_addr = strtol(call.address.c_str(), &p, 16);
+	vector<Call>::iterator c_it;
+	int del;
+	long addr;
+	char* p;
+	long new_addr;
+	long orig_addr;
+	switch (hashStringFunction(call.method)) {
+	case _malloc:
+		c_it = find_if(calls.begin(), calls.end(), [&orig_addr, &new_addr, &p, call](Call c) {
+			orig_addr = strtol(c.address.c_str(), &p, 16);
+			new_addr = strtol(call.address.c_str(), &p, 16);
 			return orig_addr <= new_addr && new_addr < orig_addr + c._size;
 			});
-		if (end != calls.end()) {
+		if (c_it != calls.end()) {
 			cout << "memory collision\n";
 			// problem
 		}
@@ -146,28 +167,26 @@ void new_call(vector<Call>& calls, const Call& call)
 			calls.push_back(call);
 		total_allocs++;
 		total_bytes += call._size;
-	}
-	else if (call.method == "FREE") {
-		char* p;
-		long addr = strtol(call.address.c_str(), &p, 16);
+		break;
+	case _free:
+		addr = strtol(call.address.c_str(), &p, 16);
 		if (addr == 0) {
 			cout << "freed null pointer\n";
 			//freed null pointer
 		}
 		else {
-			int del = erase_if(calls,
-				[call](Call c) { return c.address == call.address; });
+			del = erase_if(calls,
+				[del, call](Call c) { return c.address == call.address; });
 			if (del == 0) {
 				cout << "freed non-existing pointer\n";
 				// problem 
 			}
 		}
 		total_frees++;
-
-	}
-	else if (call.method == "REALLOC") {
-		int del = erase_if(calls,
-			[call](Call c) { return c.address == call.last_address; });
+		break;
+	case _realloc:
+		del = erase_if(calls,
+			[del, call](Call c) { return c.address == call.last_address; });
 		if (del == 0) {
 			cout << "reallocated non-existing pointer\n";
 			// problem 
@@ -176,9 +195,8 @@ void new_call(vector<Call>& calls, const Call& call)
 			calls.push_back(call);
 		total_reallocs++;
 		total_bytes += call._size;
-
+		break;
 	}
-
 }
 
 void handle_output_path() {
@@ -250,31 +268,40 @@ void show_usage(std::string name)
 	exit(0);
 }
 
+Flag hashStringFlag(string const& str) {
+	if (str == "-h" || str == "--help") return _help;
+	if (str == "-o" || str == "--output") return _output;
+	if (str == "-v" || str == "--verbose") return _verbose;
+}
+
 void parse_args(int argc, char** argv)
 {
 	if (argc < 2)
 		show_usage(argv[0]);
 
 	//parsing
+	Flag option;
 	for (int i = 1; i < argc; ++i) {
 		std::string arg = argv[i];
-		if ((arg == "-h") || (arg == "--help"))
+		switch (hashStringFlag(arg)) {
+		case _help:
 			show_usage(argv[0]);
-		// options tower
-		else if ((arg == "-o") || (arg == "--output")) {
+			break;
+		case _output:
 			if (i + 1 < argc) {
 				output = argv[++i];
 				output_flag = true;
 			}
-		}
-		else if (((arg == "-v") || (arg == "--verbose"))) {
+			break;
+		case _verbose:
 			verbose = true;
-		}
-		else {
+			break;
+		default:
 			if (i == argc - 1)
 				exe = argv[i];
 			else
 				show_usage(argv[0]);
+			break;
 		}
 	}
 
