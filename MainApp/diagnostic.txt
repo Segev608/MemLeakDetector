@@ -1,0 +1,79 @@
+START
+MALLOC	0000021463CDAC30	16
+operator new|00007FF6346E7070|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::_Default_allocate_traits::_Allocate|00007FF6346E4F10|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xmemory|76|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::_Allocate<16,std::_Default_allocate_traits,0>|00007FF6346E1FC0|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xmemory|197|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::allocator<std::_Container_proxy>::allocate|00007FF6346E6020|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xmemory|813|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::_Container_proxy_ptr12<std::allocator<std::_Container_proxy> >::_Container_proxy_ptr12<std::allocator<std::_Container_proxy> >|00007FF6346E3530|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xmemory|1289|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::basic_string<char,std::char_traits<char>,std::allocator<char> >|00007FF6346E3870|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xstring|2413|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+main|00007FF6346E6E40|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\TestSamples\test.cpp|22|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+
+MALLOC	0000021463CD72D0	48
+operator new|00007FF6346E7070|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::_Default_allocate_traits::_Allocate|00007FF6346E4F10|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xmemory|76|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::_Allocate<16,std::_Default_allocate_traits,0>|00007FF6346E1FC0|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xmemory|197|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::allocator<char>::allocate|00007FF6346E5FB0|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xmemory|813|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_Reallocate_for<<lambda_66f57f934f28d61049862f64df852ff0>,char const *>|00007FF6346E2BB0|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xstring|4302|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::assign|00007FF6346E61E0|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xstring|3042|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::assign|00007FF6346E6150|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xstring|3061|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::basic_string<char,std::char_traits<char>,std::allocator<char> >|00007FF6346E3870|C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29333\include\xstring|2413|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+main|00007FF6346E6E40|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\TestSamples\test.cpp|22|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+
+END
+MALLOC	0000021463CD7650	48
+operator new|00007FFEDB99E8D0|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+DetourDetach|00007FFEDB994850|C:\Users\Administrator\Documents\Visual Studio 2019\Projects\Detours\src\detours.cpp|2267|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+DllMain|00007FFEDB991C70|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\InjectedDLL\dllmain.cpp|78|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+dllmain_dispatch|00007FFEDB99FB20|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\dll_dllmain.cpp|257|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+_DllMainCRTStartup|00007FFEDB99FD60|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\dll_dllmain.cpp|324|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+RtlActivateActivationContextUnsafeFast|00007FFF19909900|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+LdrShutdownProcess|00007FFF1994DA50|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+RtlExitUserProcess|00007FFF1994D980|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+FatalExit|00007FFF186EE0A0|NULL|0|C:\Windows\System32\KERNEL32.DLL
+wassert|00007FFEB50D41A0|NULL|0|C:\Windows\SYSTEM32\ucrtbased.dll
+wassert|00007FFEB50D41A0|NULL|0|C:\Windows\SYSTEM32\ucrtbased.dll
+exit|00007FFEB50D4990|NULL|0|C:\Windows\SYSTEM32\ucrtbased.dll
+__scrt_common_main_seh|00007FF6346E78A0|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl|236|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+__scrt_common_main|00007FF6346E7880|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl|324|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+mainCRTStartup|00007FF6346E7BB0|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\exe_main.cpp|15|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+BaseThreadInitThunk|00007FFF186E7020|NULL|0|C:\Windows\System32\KERNEL32.DLL
+RtlUserThreadStart|00007FFF19942630|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+
+MALLOC	0000021464EE3DB0	48
+operator new|00007FFEDB99E8D0|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+DetourDetach|00007FFEDB994850|C:\Users\Administrator\Documents\Visual Studio 2019\Projects\Detours\src\detours.cpp|2267|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+DllMain|00007FFEDB991C70|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\InjectedDLL\dllmain.cpp|78|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+dllmain_dispatch|00007FFEDB99FB20|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\dll_dllmain.cpp|257|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+_DllMainCRTStartup|00007FFEDB99FD60|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\dll_dllmain.cpp|324|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+RtlActivateActivationContextUnsafeFast|00007FFF19909900|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+LdrShutdownProcess|00007FFF1994DA50|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+RtlExitUserProcess|00007FFF1994D980|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+FatalExit|00007FFF186EE0A0|NULL|0|C:\Windows\System32\KERNEL32.DLL
+wassert|00007FFEB50D41A0|NULL|0|C:\Windows\SYSTEM32\ucrtbased.dll
+wassert|00007FFEB50D41A0|NULL|0|C:\Windows\SYSTEM32\ucrtbased.dll
+exit|00007FFEB50D4990|NULL|0|C:\Windows\SYSTEM32\ucrtbased.dll
+__scrt_common_main_seh|00007FF6346E78A0|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl|236|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+__scrt_common_main|00007FF6346E7880|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl|324|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+mainCRTStartup|00007FF6346E7BB0|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\exe_main.cpp|15|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+BaseThreadInitThunk|00007FFF186E7020|NULL|0|C:\Windows\System32\KERNEL32.DLL
+RtlUserThreadStart|00007FFF19942630|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+
+MALLOC	0000021464EE4830	48
+operator new|00007FFEDB99E8D0|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\heap\new_scalar.cpp|32|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+DetourDetach|00007FFEDB994850|C:\Users\Administrator\Documents\Visual Studio 2019\Projects\Detours\src\detours.cpp|2267|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+DllMain|00007FFEDB991C70|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\InjectedDLL\dllmain.cpp|78|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+dllmain_dispatch|00007FFEDB99FB20|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\dll_dllmain.cpp|257|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+_DllMainCRTStartup|00007FFEDB99FD60|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\dll_dllmain.cpp|324|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\InjectedDLL.dll
+RtlActivateActivationContextUnsafeFast|00007FFF19909900|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+LdrShutdownProcess|00007FFF1994DA50|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+RtlExitUserProcess|00007FFF1994D980|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+FatalExit|00007FFF186EE0A0|NULL|0|C:\Windows\System32\KERNEL32.DLL
+wassert|00007FFEB50D41A0|NULL|0|C:\Windows\SYSTEM32\ucrtbased.dll
+wassert|00007FFEB50D41A0|NULL|0|C:\Windows\SYSTEM32\ucrtbased.dll
+exit|00007FFEB50D4990|NULL|0|C:\Windows\SYSTEM32\ucrtbased.dll
+__scrt_common_main_seh|00007FF6346E78A0|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl|236|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+__scrt_common_main|00007FF6346E7880|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl|324|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+mainCRTStartup|00007FF6346E7BB0|d:\agent\_work\63\s\src\vctools\crt\vcstartup\src\startup\exe_main.cpp|15|C:\Users\yakir\Projects\VisualStudioProjects\MemLeakDetector\x64\Debug\TestSamples.exe
+BaseThreadInitThunk|00007FFF186E7020|NULL|0|C:\Windows\System32\KERNEL32.DLL
+RtlUserThreadStart|00007FFF19942630|NULL|0|C:\Windows\SYSTEM32\ntdll.dll
+

@@ -12,11 +12,9 @@ MemFree origin_free = nullptr;
 MemRealloc origin_realloc = nullptr;
 
 ofstream file;
+vector<void*> in_use;
 
-SYMBOL_INFO* symbol; 
-IMAGEHLP_LINE64* line;
-
-char* get_last_call_info(int back = 1)
+void log_trace(unsigned int back = 1)
 {
 	const int MAX_STACK_COUNT = 64;
 	const int BUFFER_SIZE = 256;
@@ -25,11 +23,15 @@ char* get_last_call_info(int back = 1)
 	char mod[BUFFER_SIZE]{ 0 };
 	bool line_flag = false;
 	HANDLE process;
-	
+	SYMBOL_INFO* symbol;
+	IMAGEHLP_LINE64* line;
 	HMODULE hModule = NULL;
 	DWORD disp;
 
 	process = GetCurrentProcess();
+
+	symbol = (SYMBOL_INFO*)origin_alloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+	line = (IMAGEHLP_LINE64*)origin_alloc(sizeof(IMAGEHLP_LINE64));
 
 	ZeroMemory(symbol, sizeof(SYMBOL_INFO) + 256 * sizeof(char));
 	symbol->MaxNameLen = BUFFER_SIZE - 1;
@@ -41,35 +43,35 @@ char* get_last_call_info(int back = 1)
 	// Initialize all debug information from executable (PE)
 	SymInitialize(process, NULL, TRUE);
 
-	// "Pull" 20 frames from the stack trace
+	// "Pull" frames from the stack trace
 	frames = CaptureStackBackTrace(0, MAX_STACK_COUNT, stack, NULL);
-	if (frames < back + 1)
-		return (char*)"";
 
-	// get symbol from address
-	if (!SymFromAddr(process, (DWORD64)(stack[back]), 0, symbol))
-		return (char*)"";
+	char call[512];
+	for (unsigned int i = back; i < frames; ++i) {
+		if (!SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol))
+			continue;
 
-	// module name
-	GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-		(LPCTSTR)(symbol->Address), &hModule);
-	if (hModule != NULL)
-		GetModuleFileNameA(hModule, mod, BUFFER_SIZE);
+		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			(LPCTSTR)(symbol->Address), &hModule);
+		if (hModule != NULL)
+			GetModuleFileNameA(hModule, mod, BUFFER_SIZE);
 
-	line_flag = SymGetLineFromAddr64(process, symbol->Address, &disp, line);
+		line_flag = SymGetLineFromAddr64(process, symbol->Address, &disp, line);
 
-	char ret[1000];
-	sprintf_s(ret, "%s|%08llX|%s|%d|%s",
-		symbol->Name, 
-		symbol->Address,
-		line_flag ? line->FileName : "NULL",
-		line_flag ? line->LineNumber : 0,
-		hModule != NULL ? mod : "NULL");
+		sprintf_s(call, 512, "%s|%p|%s|%d|%s\n",
+			symbol->Name, 
+			(void*)(symbol->Address),
+			line_flag ? line->FileName : "NULL",
+			line_flag ? line->LineNumber : 0,
+			hModule != NULL ? mod : "NULL");
+		file << call;
 
-	//free(symbol);
-	//if (line) free(line);
-
-	return ret;
+		if (strcmp(symbol->Name, "main") == 0)
+			break;
+	}
+	file << '\n';
+	origin_free(symbol);
+	origin_free(line);
 }
 
 BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
@@ -82,8 +84,6 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 	{
 	case DLL_PROCESS_ATTACH:
 		DetourRestoreAfterWith();
-		symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
-		line = (IMAGEHLP_LINE64*)malloc(sizeof(IMAGEHLP_LINE64));
 		getenv_s(&s, buf, "MEMCHECK_PATH");
 		file.open(buf, ofstream::trunc);
 
@@ -103,8 +103,6 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 		//else
 		//	printf("undetoured unsuccessfully\n");
 		file.close();
-		free(symbol);
-		free(line);
 		break;
 	case DLL_THREAD_ATTACH:
 		break;
@@ -168,32 +166,61 @@ bool IAThooking(HMODULE hInstance)
 }
 
 PVOID CDECL new_alloc(size_t _Size) {
-	
+	static bool in_here = false;
+	if (in_here) return origin_alloc(_Size);
+
+	in_here = true;
 	void* p = origin_alloc(_Size);
-	
 	log_file("MALLOC\t%p\t%zu\n", p, _Size);
+	in_use.push_back(p);
+	in_here = false;
 	return p;
 }
 VOID CDECL new_free(PVOID ptr) {
+	static bool in_here = false;
+	if (in_here) return origin_free(ptr);
+	
+	in_here = true;
 	log_file("FREE\t%p\n", ptr);
+	if (ptr != nullptr) {
+		auto end = remove_if(in_use.begin(), in_use.end(), [ptr](void* p) {return p == ptr; });
+		if (end == in_use.end())
+			exit(0);
+		in_use.erase(end, in_use.end());
+	}
 	origin_free(ptr);
+	in_here = false;
 	return;
 }
 
 PVOID CDECL new_realloc(PVOID ptr, size_t s)
 {
+	static bool in_here = false;
+	if (in_here) return origin_realloc(ptr, s);
+
+	in_here = true;
+
+	auto end = remove_if(in_use.begin(), in_use.end(), [ptr](void* p) {return p == ptr; });
+	if (end == in_use.end()) {
+		log_file("REALLOC\t%p\t%zu\t%p\n", ptr, s, 0);
+		exit(0);
+	}
+	in_use.erase(end, in_use.end());
+
 	void* ret = origin_realloc(ptr, s);
 	log_file("REALLOC\t%p\t%zu\t%p\n", ptr, s, ret);
+	in_use.push_back(ret);
+	in_here = false;
 	return ret;
 }
 
 template<class... Args>
 void log_file(const char* fmt, Args... args)
 {
-	char* lc = get_last_call_info(3);
 	char output[256];
 	sprintf_s(output, 256, fmt, args...);
-	file << output << lc << '\n';
+	file << output;
+	log_trace(3);
 }
 
 PIMAGE_IMPORT_DESCRIPTOR getImportTable(HMODULE hInstance)

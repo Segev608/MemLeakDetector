@@ -12,6 +12,7 @@
 #include<conio.h>
 #include<iostream>
 #include <string>
+#include <vector>
 using namespace std;
 
 #define INJECTDLL_EXPORTS 1
@@ -23,6 +24,7 @@ using namespace std;
 #endif
 
 extern "C" __declspec(dllexport) void dummy(void) { return; }
+
 #define IMPORT_TABLE_OFFSET 1
 
 #define TARGET_ALLOCATION "malloc"
