@@ -4,13 +4,23 @@ Detects memory leaks from Windows executables using the Microsoft Research Detou
 ## Installation
 As a user, you have two ways to use the system.
 
-If you are working on the Visual Studio IDE and want to improve the system and contribute, feel free to do so by cloning our git repository on your system and running the solution file. Of course, it is highly recommended that files you want to test on the system will be compiled in Debug mode. This way you can enjoy the additional information that the system is able to obtain on executable files with debug mode compilation.
+### Visual Studio
+If you are working with Visual Studio IDE, you can clone this repository and run the `sln` file. The next step is to download Microsoft Research Detours library from nuget. You can do this by going to `Tools -> NuGet Package Manager -> Manage NuGet Packages for Solution` and in the 'Browse' section simply search "Detours". You need to download it at least for the "InjectedDLL" and "MemoLeakDetector" projects. Once you are finished it's done!
 
+From here you can use `test.cpp` in "TestSamples" project to write you code, or write it and compile it yourself! Of course, it is highly recommended that files you want to test on the system will be compiled in Debug mode. This way you can enjoy the additional information that the system is able to obtain on executable files with debug mode compilation.
+
+After you wrote compiled your code, you need to give your executable as an argument to our program. you can do this by right-click the start-up project ("MainApp") and from there `Properties -> Configuration Properties -> Debugging` and there you can change the command arguments and provide your executable. Don't forget to take into account the working directory when providing your executable's path!
+
+![image](https://user-images.githubusercontent.com/57449384/122484505-668a6500-cfdd-11eb-818c-69574af6333f.png)
+
+You can now run the program like you normally would with Visual Studio.
+
+### Independent
 On the other hand, if you are interested in using the tool for the purpose of developing your projects, you have come to the right place!
 Here is the recommended way to perform the installation:
 
 1. Extract the Memcheck folder from our repository which contains our tool
-2. Prepare a C file that you wish to perform an memory analyze on
+2. Prepare a C file that you wish to perform a memory analyze on
 3. run `vcvars32.bat` or `vcvars64.bat` to enter your prefered environment
 4. compile your code using `cl` with the following flags `/Zi /MDd /Od`: `cl /Zi /MDd /Od MyCFile.c` which should produce the following files:
   
@@ -19,6 +29,11 @@ Here is the recommended way to perform the installation:
   
 ## User Guide
 After you have successfully downloaded the tool, and compiled your code, you are ready to go!
+
+Usage: `memcheck.exe <options> EXECUTABLE`
+
+The executable is the path to your program. If the path contains spaces don't forget to wrap it with quotation marks!
+
 there are several options available to you.
 
 * -h, --help        Show a help message.
@@ -37,9 +52,9 @@ In the lower section `Analysis` you can see the analysis of you program's memory
 There are 4 types of notifications:
 
 * Warnings    - They do not involve a leak, and do not interfere the flow of the program, yet it's important for you to know.
-* Errors      - They do not involve a leak, but it's a fatal error that makes the program crash. full trace provided.
+* Errors      - They do not involve a leak, but it's a fatal error that makes your program crash. full trace provided.
 * Loss Record - This is a specific leak accuring in your program. informs about the size of the leak and its trace.
-* Summary     - This is the overall view on your program. how many bytes leaked ("in use at exit") and total heap usage.
+* Summary     - This is the overall view of your program. how many bytes leaked ("in use at exit") and total heap usage.
   
 In case you are not using `-v`, we won't show warnings or loss records, only errors and summary. 
 
