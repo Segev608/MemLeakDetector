@@ -1,6 +1,14 @@
 # MemLeakDetector
 Detects memory leaks from Windows executables using the Microsoft Research Detours library.
 
+# Installation
+As a user, you have two ways to use the system.
+
+If you are working on the Visual Studio IDE and want to improve the system and contribute, feel free to do so by cloning the project on your system and running the solution file. Of course, it is highly recommended that files you want to test on the system will be compiled in Debug mode. This way you can enjoy the additional information that the system is able to obtain on executable files with debug compilation.
+
+On the other hand, if you are interested in using the tool for the purpose of developing your projects, you have come to the right place!
+Here is the recommended way to perform the installation:
+
 ## User Guide
 After you have successfully downloaded the tool, there are several options available to you.
 
