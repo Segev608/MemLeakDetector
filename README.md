@@ -30,18 +30,18 @@ there are several options available to you.
 In order to perform an analyzing on executable file:
 
 ![image](https://user-images.githubusercontent.com/57449384/122476747-5f5c5a80-cfcf-11eb-842d-a28970412ef8.png)
-In cas you are not using `-v`, we won't show warnings or the trace of each leak, only errors and summary. 
 
+In case you are not using `-v`, we won't show warnings or the trace of each leak, only errors and summary. 
+In the upper section `Process Output` you can see your program's output.
+In the lower section `Analysis` you can see the analysis of you program's memory managment.
+There are several types of notifications:
+
+* Warnings    - They do not involve a leak, and do not interfere the flow of the program, yet it's important for you to know.
+* Errors      - They do not involve a leak, but it's a fatal error that makes the program crash. full trace provided.
+* Loss Record - This is a specific leak accuring in your program. informs about the size of the leak and its trace.
+* Summary     - This is the overall view on your program. how many bytes leaked ("in use at exit"), and total heap usage.
+  
 --output flag results:
 
 <img src=https://user-images.githubusercontent.com/57367786/122339574-f1218480-cf49-11eb-8430-fe81397570cc.png width="500" height="400" />
 
-Explain:
-1. Which memory function performed  
-2. Pointer Address in the memory
-3. Allocation amount (realloc function also prints the new pointer)
-4. Stack trace 
-5. Location address in the memory 
-6. File path where the action happend 
-7. The code line number  
-8. Module name
