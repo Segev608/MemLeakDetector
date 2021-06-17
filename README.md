@@ -29,9 +29,8 @@ there are several options available to you.
 
 In order to perform an analyzing on executable file:
 
-<img src=https://user-images.githubusercontent.com/57367786/122337987-bc143280-cf47-11eb-8bb3-2c67ce919eab.png width="500" height="350" />
+![image](https://user-images.githubusercontent.com/57449384/122476747-5f5c5a80-cfcf-11eb-842d-a28970412ef8.png)
 
---verbose flag result:
 
 --output flag results:
 
