@@ -12,15 +12,15 @@ After you have successfully downloaded the tool, there are several options avail
 
 In order to perform an analyzing on executable file:
 
-![image](https://user-images.githubusercontent.com/57367786/122337987-bc143280-cf47-11eb-8bb3-2c67ce919eab.png)
+<img src=https://user-images.githubusercontent.com/57367786/122337987-bc143280-cf47-11eb-8bb3-2c67ce919eab.png width="500" height="350" />
 
 --verbose flag result:
 
 --output flag results:
 
-![image](https://user-images.githubusercontent.com/57367786/122339574-f1218480-cf49-11eb-8430-fe81397570cc.png)
+<img src=https://user-images.githubusercontent.com/57367786/122339574-f1218480-cf49-11eb-8430-fe81397570cc.png width="500" height="400" />
 
-explain:
+Explain:
 1. Which memory function performed  
 2. Pointer Address in the memory
 3. Allocation amount (realloc function also prints the new pointer)
