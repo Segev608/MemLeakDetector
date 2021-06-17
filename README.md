@@ -30,7 +30,7 @@ there are several options available to you.
 In order to perform an analyzing on executable file:
 
 ![image](https://user-images.githubusercontent.com/57449384/122476747-5f5c5a80-cfcf-11eb-842d-a28970412ef8.png)
-
+In cas you are not using `-v`, we won't show warnings or the trace of each leak, only errors and summary. 
 
 --output flag results:
 
