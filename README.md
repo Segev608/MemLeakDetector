@@ -9,7 +9,7 @@ If you are working with Visual Studio IDE, you can clone this repository and run
 
 From here you can use `test.cpp` in "TestSamples" project to write you code, or write it and compile it yourself! Of course, it is highly recommended that files you want to test on the system will be compiled in Debug mode. This way you can enjoy the additional information that the system is able to obtain on executable files with debug mode compilation.
 
-After you wrote compiled your code, you need to give your executable as an argument to our program. you can do this by right-click the start-up project ("MainApp") and from there `Properties -> Configuration Properties -> Debugging` and there you can change the command arguments and provide your executable. Don't forget to take into account the working directory when providing your executable's path!
+After you wrote compiled your code, you need to give your executable as an argument to our program. you can do this by right-click the start-up project ("MainApp") and from there `Properties -> Configuration Properties -> Debugging` and there you can change the command arguments and provide your executable. Don't forget to take into account the working directory when providing your executable's path! (Do NOT change it!)
 
 ![image](https://user-images.githubusercontent.com/57449384/122484505-668a6500-cfdd-11eb-818c-69574af6333f.png)
 
