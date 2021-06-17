@@ -11,7 +11,7 @@ Here is the recommended way to perform the installation:
 
 1. Open the Memcheck folder which contains our tool
 2. Prepare a C file that you wish to perform an memory analyze on
-4. compile this code using those flags:    *<cmd> cl /Zi /MDd /Od your-file.c* which should produce the following files:
+4. compile this code using those flags:  `cl /Zi /MDd /Od your-file.c` which should produce the following files:
   
 ![image](https://user-images.githubusercontent.com/57367786/122437588-83557700-cfa2-11eb-9add-6f63f1c3308e.png)
 
