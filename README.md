@@ -4,7 +4,7 @@ Detects memory leaks from Windows executables using the Microsoft Research Detou
 ## Installation
 As a user, you have two ways to use the system.
 
-If you are working on the Visual Studio IDE and want to improve the system and contribute, feel free to do so by cloning the project on your system and running the solution file. Of course, it is highly recommended that files you want to test on the system will be compiled in Debug mode. This way you can enjoy the additional information that the system is able to obtain on executable files with debug compilation.
+If you are working on the Visual Studio IDE and want to improve the system and contribute, feel free to do so by cloning our git repository on your system and running the solution file. Of course, it is highly recommended that files you want to test on the system will be compiled in Debug mode. This way you can enjoy the additional information that the system is able to obtain on executable files with debug mode compilation.
 
 On the other hand, if you are interested in using the tool for the purpose of developing your projects, you have come to the right place!
 Here is the recommended way to perform the installation:
@@ -21,9 +21,9 @@ After you have successfully downloaded the tool, there are several options avail
 
 * -h, --help         Show this help message.
 
-*  -o, --output      Specify the output path for a file that will contain all heap usage information.
+* -o, --output      Specify the output path for a file that will contain all heap usage information.
 
-*  -v, --verbose     Retraive warnings and more information about the leakes.
+* -v, --verbose     Retraive warnings and more information about the leakes.
 
 In order to perform an analyzing on executable file:
 
