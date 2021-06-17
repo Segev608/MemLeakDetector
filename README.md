@@ -13,7 +13,7 @@ After you wrote compiled your code, you need to give your executable as an argum
 
 ![image](https://user-images.githubusercontent.com/57449384/122484505-668a6500-cfdd-11eb-818c-69574af6333f.png)
 
-You can now run the program like you normally would with Visual Studio.
+You can now run the application like you normally would with Visual Studio.
 
 ### Independent
 On the other hand, if you are interested in using the tool for the purpose of developing your projects, you have come to the right place!
