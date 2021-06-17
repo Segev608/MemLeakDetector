@@ -24,7 +24,7 @@ HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 bool output_flag = false;
 char* output = (char*)"diagnostic.txt";
 char* exe = nullptr;
-bool verbose = true;
+bool verbose = false;
 
 int total_allocs = 0;
 int total_frees = 0;
@@ -107,9 +107,9 @@ int main(int argc, char** argv)
 	cout << "\n ====================================================\n\n";
 
 	ofile.close();
-	//if (!output_flag) {
-	//	remove(output);
-	//}
+	if (!output_flag) {
+		remove(output);
+	}
 
 	cout << "\n ** We strongly recommend to compile your program in Debug mode ** \n";
 
@@ -155,15 +155,6 @@ void analyze(ifstream& ofile) {
 			c.trace.push_back(f);
 			ofile.getline(buf, 1000);
 		}
-
-		//if (!line.empty()) {
-		//	auto result = split(line, '|');
-		//	c.caller = result[0];
-		//	c.caller_addr = result[1];
-		//	c.file = result[2] == "NULL" ? "" : result[2];
-		//	c.caller_line = atoi(result[3].c_str());
-		//	c._module = result[4] == "NULL" ? "" : result[4];
-		//}
 
 		new_call(calls, c);
 	}
@@ -386,11 +377,6 @@ void print_trace(const Call& c) {
 
 template<class... Args>
 void msg(char type, bool term, const char* fmt, Args... args) {
-	//string err = " Error: ";
-	//err += err_fmt;
-	//char buf[1024];
-	//sprintf_s(buf, 1024, err.c_str(), args...);
-	//colorful_output(buf, _RED);
 	cout << " ";
 	switch (type)
 	{
