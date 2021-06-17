@@ -1,11 +1,5 @@
 
 #include "pch.h"
-#include "InjectedDll.h"
-#pragma warning(push)
-#pragma warning(disable : 4091)
-#include "DbgHelp.h"
-#pragma comment(lib, "DbgHelp.lib")
-#pragma warning(pop)
 
 MemAlloc origin_alloc = nullptr;
 MemFree origin_free = nullptr;
@@ -14,65 +8,14 @@ MemRealloc origin_realloc = nullptr;
 ofstream file;
 vector<void*> in_use;
 
-void log_trace(unsigned int back = 1)
-{
-	const int MAX_STACK_COUNT = 64;
-	const int BUFFER_SIZE = 256;
-	void* stack[MAX_STACK_COUNT];
-	unsigned short frames;
-	char mod[BUFFER_SIZE]{ 0 };
-	bool line_flag = false;
-	HANDLE process;
-	SYMBOL_INFO* symbol;
-	IMAGEHLP_LINE64* line;
-	HMODULE hModule = NULL;
-	DWORD disp;
-
-	process = GetCurrentProcess();
-
-	symbol = (SYMBOL_INFO*)origin_alloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
-	line = (IMAGEHLP_LINE64*)origin_alloc(sizeof(IMAGEHLP_LINE64));
-
-	ZeroMemory(symbol, sizeof(SYMBOL_INFO) + 256 * sizeof(char));
-	symbol->MaxNameLen = BUFFER_SIZE - 1;
-	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-
-	ZeroMemory(line, sizeof(IMAGEHLP_LINE64));
-	line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-
-	// Initialize all debug information from executable (PE)
-	SymInitialize(process, NULL, TRUE);
-
-	// "Pull" frames from the stack trace
-	frames = CaptureStackBackTrace(0, MAX_STACK_COUNT, stack, NULL);
-
-	char call[512];
-	for (unsigned int i = back; i < frames; ++i) {
-		if (!SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol))
-			continue;
-
-		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-			(LPCTSTR)(symbol->Address), &hModule);
-		if (hModule != NULL)
-			GetModuleFileNameA(hModule, mod, BUFFER_SIZE);
-
-		line_flag = SymGetLineFromAddr64(process, symbol->Address, &disp, line);
-
-		sprintf_s(call, 512, "%s|%p|%s|%d|%s\n",
-			symbol->Name, 
-			(void*)(symbol->Address),
-			line_flag ? line->FileName : "NULL",
-			line_flag ? line->LineNumber : 0,
-			hModule != NULL ? mod : "NULL");
-		file << call;
-
-		if (strcmp(symbol->Name, "main") == 0)
-			break;
-	}
-	file << '\n';
-	origin_free(symbol);
-	origin_free(line);
-}
+bool IAThooking(HMODULE);
+void log_trace(unsigned int);
+PVOID CDECL new_alloc(size_t);
+VOID CDECL new_free(PVOID);
+PVOID CDECL new_realloc(PVOID, size_t);
+template<class... Args>
+void log_file(const char*, Args...);
+PIMAGE_IMPORT_DESCRIPTOR getImportTable(HMODULE);
 
 BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 {
@@ -97,11 +40,7 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 		if (origin_alloc)	DetourDetach(&(PVOID&)origin_alloc, new_alloc);
 		if (origin_free)	DetourDetach(&(PVOID&)origin_free, new_free);
 		if (origin_realloc) DetourDetach(&(PVOID&)origin_realloc, new_realloc);
-
-		if (DetourTransactionCommit() == NO_ERROR);
-		//	printf("undetoured successfully\n");
-		//else
-		//	printf("undetoured unsuccessfully\n");
+		DetourTransactionCommit();
 		file.close();
 		break;
 	case DLL_THREAD_ATTACH:
@@ -115,7 +54,6 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 
 bool IAThooking(HMODULE hInstance)
 {
-
 	PIMAGE_IMPORT_DESCRIPTOR importedModule;
 	PIMAGE_THUNK_DATA pFirstThunk, pOriginalFirstThunk;
 	PIMAGE_IMPORT_BY_NAME pFuncData;
@@ -157,12 +95,80 @@ bool IAThooking(HMODULE hInstance)
 		importedModule++; //next module (DLL)
 	}
 
-	if (DetourTransactionCommit() == NO_ERROR);
-	//	printf("detoured successfully\n");
-	//else
-	//	printf("detoured un-successfully\n");
+	if (DetourTransactionCommit() != NO_ERROR) {
+		printf(" Error: Could not hook memory managment functions.");
+		exit(0);
+	}
 
 	return false;
+}
+
+void log_trace(unsigned int back = 1)
+{
+	const int MAX_STACK_COUNT = 64;
+	const int BUFFER_SIZE = 256;
+	void* stack[MAX_STACK_COUNT];
+	unsigned short frames;
+	char mod[BUFFER_SIZE]{ 0 };
+	bool line_flag = false;
+	HANDLE process;
+	SYMBOL_INFO* symbol;
+	IMAGEHLP_LINE64* line;
+	HMODULE hModule = NULL;
+	DWORD disp;
+
+	process = GetCurrentProcess();
+
+	if (origin_alloc) {
+		symbol = (SYMBOL_INFO*)origin_alloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+		line = (IMAGEHLP_LINE64*)origin_alloc(sizeof(IMAGEHLP_LINE64));
+	}
+	else
+	{
+		symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+		line = (IMAGEHLP_LINE64*)malloc(sizeof(IMAGEHLP_LINE64));
+	}
+	ZeroMemory(symbol, sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+	symbol->MaxNameLen = BUFFER_SIZE - 1;
+	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+
+	ZeroMemory(line, sizeof(IMAGEHLP_LINE64));
+	line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+	// Initialize all debug information from executable (PE)
+	SymInitialize(process, NULL, TRUE);
+	// "Pull" frames from the stack trace
+	frames = CaptureStackBackTrace(0, MAX_STACK_COUNT, stack, NULL);
+	char call[512];
+	for (unsigned int i = back; i < frames; ++i) {
+		if (!SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol))
+			continue;
+
+		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+			(LPCTSTR)(symbol->Address), &hModule);
+		if (hModule != NULL)
+			GetModuleFileNameA(hModule, mod, BUFFER_SIZE);
+
+		line_flag = SymGetLineFromAddr64(process, symbol->Address, &disp, line);
+		sprintf_s(call, 512, "%s|%p|%s|%d|%s\n",
+			symbol->Name,
+			(void*)(symbol->Address),
+			line_flag ? line->FileName : "NULL",
+			line_flag ? line->LineNumber : 0,
+			hModule != NULL ? mod : "NULL");
+		file << call;
+		if (strcmp(symbol->Name, "main") == 0)
+			break;
+	}
+	file << '\n';
+	if (origin_free) {
+		origin_free(symbol);
+		origin_free(line);
+	}
+	else
+	{
+		free(symbol);
+		free(line);
+	}
 }
 
 PVOID CDECL new_alloc(size_t _Size) {
@@ -176,6 +182,7 @@ PVOID CDECL new_alloc(size_t _Size) {
 	in_here = false;
 	return p;
 }
+
 VOID CDECL new_free(PVOID ptr) {
 	static bool in_here = false;
 	if (in_here) return origin_free(ptr);
@@ -237,5 +244,3 @@ PIMAGE_IMPORT_DESCRIPTOR getImportTable(HMODULE hInstance)
 	return (PIMAGE_IMPORT_DESCRIPTOR)((PBYTE)hInstance + dataDirectory.VirtualAddress);//ImageBase+RVA to import table
 
 }
-
-

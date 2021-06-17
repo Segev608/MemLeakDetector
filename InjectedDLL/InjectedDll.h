@@ -9,10 +9,14 @@
 #define _DLL_H_
 
 #include "pch.h"
-#include<conio.h>
 #include<iostream>
 #include <string>
 #include <vector>
+#pragma warning(push)
+#pragma warning(disable : 4091)
+#include "DbgHelp.h"
+#pragma comment(lib, "DbgHelp.lib")
+#pragma warning(pop)
 using namespace std;
 
 #define INJECTDLL_EXPORTS 1

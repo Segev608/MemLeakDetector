@@ -9,7 +9,7 @@ string exe;
 bool verbose = false;
 
 enum class Flag { HELP, OUTPUT, VERBOSE, NONE };
-Flag hashStringFlag(string const& str) {
+Flag hash_flag(string const& str) {
 	if (str == "-h" || str == "--help") return Flag::HELP;
 	if (str == "-o" || str == "--output") return Flag::OUTPUT;
 	if (str == "-v" || str == "--verbose") return Flag::VERBOSE;
@@ -24,6 +24,7 @@ int main(int argc, char** argv)
 {  
 	parse_args(argc, argv);
 	
+	// get relative (or full) path to the program's directory
 	string cmd = argv[0];
 	replace(cmd.begin(), cmd.end(), '/', '\\');
 	size_t pos = cmd.rfind('\\');
@@ -31,8 +32,8 @@ int main(int argc, char** argv)
 
 	try {
 		cmd += is_x64(exe.c_str()) ?
-			//"bin\\memcheck64.exe" : "bin\\memcheck32.exe";
-			"..\\x64\\Debug\\MemoLeakDetector.exe" : "..\\Debug\\MemoLeakDetector.exe";
+			//"bin\\memcheck64.exe" : "bin\\memcheck32.exe";	// Production
+			"..\\x64\\Debug\\MemoLeakDetector.exe" : "..\\Debug\\MemoLeakDetector.exe"; // VS version
 	}
 	catch (const char*){
 		printf(" Error: Executable not found.\n");
@@ -78,7 +79,7 @@ void parse_args(int argc, char** argv)
 
 	//parsing
 	for (int i = 1; i < argc; ++i) {
-		switch (hashStringFlag(argv[i])) {
+		switch (hash_flag(argv[i])) {
 		case Flag::HELP:
 			show_usage(argv[0]);
 			break;

@@ -1,11 +1,11 @@
-#define _CRT_SECURE_NO_WARNINGS
-
 #include <iostream>
-#include <windows.h>
 #include <fstream>
 #include <vector>
+#include <windows.h>
 #include <detours.h>
 using namespace std;
+
+#define Production 0
 
 #define _RED		12
 #define _YELLOW		14
@@ -15,21 +15,16 @@ using namespace std;
 
 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-// TODO :
-// - Finalize output
-// - Compile production (chage dll path etc.)
-// - orgenize full package : production program + source code package
-
 // options declerations
-bool output_flag = false;
-char* output = (char*)"diagnostic.txt";
 char* exe = nullptr;
 bool verbose = false;
+bool output_flag = false;
+const char* output = "diagnostic.txt";
 
-int total_allocs = 0;
-int total_frees = 0;
-int total_reallocs = 0;
-size_t total_bytes = 0;
+int total_allocs	= 0;
+int total_frees		= 0;
+int total_reallocs	= 0;
+size_t total_bytes	= 0;
 const char* DLLPath;
 
 struct Function
@@ -41,6 +36,10 @@ struct Function
 	string _module;
 
 	friend ostream& operator<<(ostream& os, const Function& f) {
+		// one of the following formats:
+		// <address>: <name>
+		// <address>: <name> (<file>:<line>)
+		// <address>: <name> (in <module>)
 		os << "0x" << f.address << ": " << f.name;
 		if (f.line_number) {
 			const char* file_name = strrchr(f.file.c_str(), '\\');
@@ -74,8 +73,8 @@ MemoryFunction hashStringFunction(string const& str) {
 // main logic
 bool run_exe();
 void handle_output_path();
-void analyze(ifstream& ofile);
-void new_call(vector<Call>& calls, const Call& call);
+void analyze(ifstream&);
+void new_call(vector<Call>&, const Call&);
 //input & output
 void print_trace(const Call&);
 void parse_args(int, char**);
@@ -83,15 +82,15 @@ void print_results(vector<Call>);
 template<class... Args>
 void msg(char, bool, const char*, Args...);
 // helpers
-vector<string> split(string s, char t);
+vector<string> split(string, char);
 template<class T, class Pred>
-size_t erase_if(vector<T>& v, Pred pred);
-void colorful_output(const char* out, const int color);
+size_t erase_if(vector<T>&, Pred);
+void colorful_output(const char*, const int);
 
 int main(int argc, char** argv)
 {
 	parse_args(argc, argv);
-	
+
 	cout << "\n ================== Process Output ==================\n";
 	bool r = run_exe();
 	cout << "\n ====================================================\n\n";
@@ -153,7 +152,7 @@ void analyze(ifstream& ofile) {
 			f.line_number = atoi(result[3].c_str());
 			f._module = result[4] == "NULL" ? "" : result[4];
 			c.trace.push_back(f);
-			ofile.getline(buf, 1000);
+			ofile.getline(buf, 512);
 		}
 
 		new_call(calls, c);
@@ -258,7 +257,8 @@ bool run_exe() {
 	ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 	si.cb = sizeof(STARTUPINFO);
 
-	const char* DLLPath =
+#if !Production
+	DLLPath =
 #ifdef _WIN64
 		R"(..\x64\Debug\InjectedDLL.dll)";
 #elif defined(_WIN32)
@@ -266,7 +266,8 @@ bool run_exe() {
 #else
 #error "Must define either _WIN32 or _WIN64".
 #endif
-
+#endif
+	
 	size_t l = strlen(exe) + 1;
 	LPTSTR cmd = new wchar_t[l];
 	mbstowcs_s(NULL, cmd, l, exe, l - 1);
@@ -307,20 +308,23 @@ void parse_args(int argc, char** argv)
 		output_flag = true;
 	}
 
-//	char* p = strrchr(argv[0], '\\');
-//	p = p ? p + 1 : argv[0];
-//	p[0] = '\0';
-//	string path = argv[0];
-//	path +=
-//#ifdef _WIN64
-//		"..\\dll\\hookdll64.dll";
-//#elif defined(_WIN32)
-//		"..\\dll\\hookdll32.dll";
-//#else
-//#error "Must define either _WIN32 or _WIN64".
-//#endif
-//
-//	DLLPath = _strdup(path.c_str());
+#if Production
+	char* p = strrchr(argv[0], '\\');
+	p = p ? p + 1 : argv[0];
+	p[0] = '\0';
+	string path = argv[0];
+	path +=
+#ifdef _WIN64
+		"..\\dll\\hookdll64.dll";
+#elif defined(_WIN32)
+		"..\\dll\\hookdll32.dll";
+#else
+#error "Must define either _WIN32 or _WIN64".
+#endif
+
+	DLLPath = _strdup(path.c_str());
+#endif
+
 	handle_output_path();
 }
 
