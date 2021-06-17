@@ -1,7 +1,7 @@
 # MemLeakDetector
 Detects memory leaks from Windows executables using the Microsoft Research Detours library.
 
-# Installation
+## Installation
 As a user, you have two ways to use the system.
 
 If you are working on the Visual Studio IDE and want to improve the system and contribute, feel free to do so by cloning the project on your system and running the solution file. Of course, it is highly recommended that files you want to test on the system will be compiled in Debug mode. This way you can enjoy the additional information that the system is able to obtain on executable files with debug compilation.
@@ -9,6 +9,13 @@ If you are working on the Visual Studio IDE and want to improve the system and c
 On the other hand, if you are interested in using the tool for the purpose of developing your projects, you have come to the right place!
 Here is the recommended way to perform the installation:
 
+1. Open the Memcheck folder which contains our tool
+2. Prepare a C file that you wish to perform an memory analyze on
+4. compile this code using those flags:    *<cmd> cl /Zi /MDd /Od your-file.c* which should produce the following files:
+  
+![image](https://user-images.githubusercontent.com/57367786/122437588-83557700-cfa2-11eb-9add-6f63f1c3308e.png)
+
+  
 ## User Guide
 After you have successfully downloaded the tool, there are several options available to you.
 
