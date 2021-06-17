@@ -9,7 +9,7 @@ If you are working on the Visual Studio IDE and want to improve the system and c
 On the other hand, if you are interested in using the tool for the purpose of developing your projects, you have come to the right place!
 Here is the recommended way to perform the installation:
 
-1. Extract the Memcheck folder from our reposu=itory which contains our tool
+1. Extract the Memcheck folder from our repository which contains our tool
 2. Prepare a C file that you wish to perform an memory analyze on
 3. run `vcvars32` or `vcvars64` to enter your prefered environment
 4. compile your code using `cl` with the following flags: `/Zi /MDd /Od` which should produce the following files:
