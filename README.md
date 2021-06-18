@@ -22,8 +22,15 @@ Here is the recommended way to perform the installation and use our tool:
 1. Extract the Memcheck folder from our repository which contains our tool
 2. Prepare a C file that you wish to perform a memory analyze on
 3. run `vcvars32.bat` or `vcvars64.bat` to enter your prefered environment
-4. compile your code using `cl` with the following flags `/Zi /MDd /Od`: `cl /Zi /MDd /Od MyCFile.c` which should produce the following files:
-  
+4. Compile your code using `cl` with the following flags `/Zi /MDd /Od`: `cl /Zi /MDd /Od MyCFile.c` which should produce the following files:
+
+(Explanation taken from the msdn website - https://docs.microsoft.com/)
+`/Zi` - Produces a separate PDB file that contains all the symbolic debugging information for use with the debugger. The debugging information isn't included in the object files or executable, which makes them much smaller.
+
+`/MDd` - Causes the application to use the debug multithread-specific and also causes the compiler to place the library name MSVCRTD.lib into the .obj file.
+
+`/Od` - Turns off all optimizations in the program and speeds compilation.
+
 ![image](https://user-images.githubusercontent.com/57367786/122437588-83557700-cfa2-11eb-9add-6f63f1c3308e.png)
 
 You are now ready to use memchek!
