@@ -25,6 +25,7 @@ Here is the recommended way to perform the installation and use our tool:
 4. Compile your code using `cl` with the following flags `/Zi /MDd /Od`: `cl /Zi /MDd /Od MyCFile.c` which should produce the following files:
 
 (Explanation taken from the msdn website - https://docs.microsoft.com/)
+
 `/Zi` - Produces a separate PDB file that contains all the symbolic debugging information for use with the debugger. The debugging information isn't included in the object files or executable, which makes them much smaller.
 
 `/MDd` - Causes the application to use the debug multithread-specific and also causes the compiler to place the library name MSVCRTD.lib into the .obj file.
