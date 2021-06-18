@@ -20,7 +20,7 @@ On the other hand, if you are more of a command-line person, you have come to th
 Here is the recommended way to perform the installation and use our tool:
 
 1. Extract the Memcheck folder from our repository which contains our tool
-2. Prepare a C file that you wish to perform a memory analyze on
+2. Prepare a C file that you wish to perform a memory analyze on (or use the existing ones in 'test' folder)
 3. run `vcvars32.bat` or `vcvars64.bat` to enter your prefered environment
 4. Compile your code using `cl` with the following flags `/Zi /MDd /Od`: `cl /Zi /MDd /Od MyCFile.c` which should produce the following files:
 
