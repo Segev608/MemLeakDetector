@@ -7,6 +7,7 @@ MemRealloc origin_realloc = nullptr;
 
 ofstream file;
 vector<void*> in_use;
+bool in_here = false;
 
 bool IAThooking(HMODULE);
 void log_trace(unsigned int);
@@ -23,6 +24,7 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 		return true;
 	size_t s = 1;
 	char buf[256];
+	cout << "HERE\n";
 	switch (reason)
 	{
 	case DLL_PROCESS_ATTACH:
@@ -63,24 +65,25 @@ bool IAThooking(HMODULE hInstance)
 	DetourUpdateThread(GetCurrentThread());
 	while (*(WORD*)importedModule != 0) //over on the modules (DLLs)
 	{
-
 		pFirstThunk = (PIMAGE_THUNK_DATA)((PBYTE)hInstance + importedModule->FirstThunk);//pointing to its IAT
 		pOriginalFirstThunk = (PIMAGE_THUNK_DATA)((PBYTE)hInstance + importedModule->OriginalFirstThunk);//pointing to OriginalThunk
 		pFuncData = (PIMAGE_IMPORT_BY_NAME)((PBYTE)hInstance + pOriginalFirstThunk->u1.AddressOfData);// and to IMAGE_IMPORT_BY_NAME
 		char* module_name = (char*)((PBYTE)hInstance + importedModule->Name);
-		// cout << module_name << '\n';
+		cout << module_name << '\n';
 		while (*(WORD*)pFirstThunk != 0 && *(WORD*)pOriginalFirstThunk != 0) //moving over IAT and over names' table
 		{
-			// cout << '\t' << pFuncData->Name << endl;
+			cout << '\t' << pFuncData->Name << endl;
 			if (std::string(pFuncData->Name).compare(TARGET_ALLOCATION) == 0)//checks if we are in the malloc Function
 			{
 				origin_alloc = (MemAlloc)DetourFindFunction(module_name, pFuncData->Name);
 				DetourAttach(&(PVOID&)origin_alloc, new_alloc);
+				lib = _strdup(module_name);
 			}
 			else if (std::string(pFuncData->Name).compare(TARGET_DEALLOCATION) == 0)//checks if we are in the malloc Function
 			{
 				origin_free = (MemFree)DetourFindFunction(module_name, pFuncData->Name);
 				DetourAttach(&(PVOID&)origin_free, new_free);
+				lib = _strdup(module_name);
 			}
 			else if (std::string(pFuncData->Name).compare(TARGET_REALLOCATION) == 0)
 			{
@@ -112,69 +115,93 @@ void log_trace(unsigned int back = 1)
 	char mod[BUFFER_SIZE]{ 0 };
 	bool line_flag = false;
 	HANDLE process;
-	SYMBOL_INFO* symbol;
-	IMAGEHLP_LINE64* line;
+	SYMBOL_INFO* symbol = (SYMBOL_INFO*)alloca(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+	IMAGEHLP_LINE64 line;
 	HMODULE hModule = NULL;
 	DWORD disp;
-
 	process = GetCurrentProcess();
+	//HINSTANCE hMsvcrt = nullptr;
+	cout << "HERE 1\n";
+	//if (!origin_alloc || !origin_free) {
+	//	cout << "HERE 2\n";
+	//	hMsvcrt = LoadLibrary(L"msvcrt.dll");
+	//}
+	cout << "HERE 3\n";
 
-	if (origin_alloc) {
-		symbol = (SYMBOL_INFO*)origin_alloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
-		line = (IMAGEHLP_LINE64*)origin_alloc(sizeof(IMAGEHLP_LINE64));
-	}
-	else
-	{
-		symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
-		line = (IMAGEHLP_LINE64*)malloc(sizeof(IMAGEHLP_LINE64));
-	}
-	ZeroMemory(symbol, sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+	//if (origin_alloc) {
+	//	symbol = (SYMBOL_INFO*)origin_alloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+	//	line = (IMAGEHLP_LINE64*)origin_alloc(sizeof(IMAGEHLP_LINE64));
+	//}
+	//else
+	//{
+	//	symbol = (SYMBOL_INFO*)malloc(sizeof(SYMBOL_INFO) + 256 * sizeof(char));
+	//	line = (IMAGEHLP_LINE64*)malloc(sizeof(IMAGEHLP_LINE64));
+	//}
+	ZeroMemory(symbol, sizeof(SYMBOL_INFO) +256 * sizeof(char));
 	symbol->MaxNameLen = BUFFER_SIZE - 1;
 	symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
 
-	ZeroMemory(line, sizeof(IMAGEHLP_LINE64));
-	line->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
+	ZeroMemory(&line, sizeof(IMAGEHLP_LINE64));
+	line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 	// Initialize all debug information from executable (PE)
-	SymInitialize(process, NULL, TRUE);
+	cout << "HERE 4\n";
+	if (!SymInitialize(process, NULL, TRUE));
+	/*{
+		cout << "HERE 4.5\n";
+		file << '\n';
+		return;
+	}*/
+	cout << "HERE 5\n";
+
 	// "Pull" frames from the stack trace
 	frames = CaptureStackBackTrace(0, MAX_STACK_COUNT, stack, NULL);
 	char call[512];
+	cout << "HERE 6\n";
 	for (unsigned int i = back; i < frames; ++i) {
 		if (!SymFromAddr(process, (DWORD64)(stack[i]), 0, symbol))
 			continue;
+		cout << "HERE 5\n";
 
 		GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
 			(LPCTSTR)(symbol->Address), &hModule);
 		if (hModule != NULL)
 			GetModuleFileNameA(hModule, mod, BUFFER_SIZE);
-
-		line_flag = SymGetLineFromAddr64(process, symbol->Address, &disp, line);
+		
+		line_flag = SymGetLineFromAddr64(process, symbol->Address, &disp, &line);
 		sprintf_s(call, 512, "%s|%p|%s|%d|%s\n",
 			symbol->Name,
 			(void*)(symbol->Address),
-			line_flag ? line->FileName : "NULL",
-			line_flag ? line->LineNumber : 0,
+			line_flag ? line.FileName : "NULL",
+			line_flag ? line.LineNumber : 0,
 			hModule != NULL ? mod : "NULL");
 		file << call;
 		if (strcmp(symbol->Name, "main") == 0)
 			break;
 	}
+	
 	file << '\n';
-	if (origin_free) {
-		origin_free(symbol);
-		origin_free(line);
-	}
-	else
-	{
-		free(symbol);
-		free(line);
-	}
+	//if (origin_free) {
+	//	origin_free(symbol);
+	//	origin_free(line);
+	//}
+	//else
+	//{
+	//	MemFree f = (MemFree)GetProcAddress(GetModuleHandleA(lib.c_str()), "free");
+	//	cout << "HERE 7\n";
+	//	//cout << f << '\n';
+	//	f(symbol);
+	//	cout << "HERE 8\n";
+	//	f(line);
+	//	cout << "HERE 9\n";
+	//	//FreeLibrary(hMsvcrt);
+	//}
+	cout << "HERE 10\n";
+	SymCleanup(process);
 }
 
 PVOID CDECL new_alloc(size_t _Size) {
-	static bool in_here = false;
 	if (in_here) return origin_alloc(_Size);
-
+	cout << "NEW MALLOC\n";
 	in_here = true;
 	void* p = origin_alloc(_Size);
 	log_file("MALLOC\t%p\t%zu\n", p, _Size);
@@ -184,9 +211,9 @@ PVOID CDECL new_alloc(size_t _Size) {
 }
 
 VOID CDECL new_free(PVOID ptr) {
-	static bool in_here = false;
 	if (in_here) return origin_free(ptr);
-	
+	cout << "NEW FREE\n";
+
 	in_here = true;
 	log_file("FREE\t%p\n", ptr);
 	if (ptr != nullptr) {
@@ -202,7 +229,6 @@ VOID CDECL new_free(PVOID ptr) {
 
 PVOID CDECL new_realloc(PVOID ptr, size_t s)
 {
-	static bool in_here = false;
 	if (in_here) return origin_realloc(ptr, s);
 
 	in_here = true;

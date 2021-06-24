@@ -5,7 +5,7 @@
 #include <detours.h>
 using namespace std;
 
-#define Production 0
+#define Production 1
 
 #define _RED		12
 #define _YELLOW		14
