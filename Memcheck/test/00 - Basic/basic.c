@@ -2,11 +2,11 @@
 #include <stdio.h>
 
 void first_leak(){
-	int* ptr1 = malloc(11); /* memory leak of 1 bytes! */  
+	int* ptr1 = malloc(11); /* memory leak of 11 bytes! */  
 }
 
 void second_leak(){
-	int* ptr2 = malloc(22); /* memory leak of 2 bytes! */  
+	int* ptr2 = malloc(22); /* memory leak of 22 bytes! */  
 }
 
 void third_leak(){
