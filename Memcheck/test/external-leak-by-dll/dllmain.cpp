@@ -21,7 +21,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     case DLL_PROCESS_DETACH:
         printf("Exiting dll\n");
         //free(p);   <--- problem
-        printf("LEAK\n");
         break;
     }
     return TRUE;
