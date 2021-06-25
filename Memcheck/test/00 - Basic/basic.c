@@ -1,17 +1,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-void welcome(){
-	printf("Welocome to our Memcheck tool tutorial!\n");
+void first_leak(){
+	int* ptr1 = malloc(11); /* memory leak of 1 bytes! */  
 }
 
-void first_leak(){
-	printf("Here is the first memory leak we'll see\n");
-	int* ptr = malloc(55); /* memory leak of 55 bytes! */  
+void second_leak(){
+	int* ptr2 = malloc(22); /* memory leak of 2 bytes! */  
+}
+
+void third_leak(){
+	int* ptr3 = malloc(33);
+	free(ptr3);
 }
 
 int main(){
-	welcome();
 	first_leak();
+	second_leak();
+	third_leak();
 	return 0;
 }
