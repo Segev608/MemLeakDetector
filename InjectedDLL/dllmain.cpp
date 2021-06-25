@@ -123,7 +123,7 @@ void log_trace(unsigned int back = 1)
 	ZeroMemory(&line, sizeof(IMAGEHLP_LINE64));
 	line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 	// Initialize all debug information from executable (PE)
-	if (!SymInitialize(process, NULL, TRUE));
+	SymInitialize(process, NULL, TRUE);
 
 	// "Pull" frames from the stack trace
 	frames = CaptureStackBackTrace(0, MAX_STACK_COUNT, stack, NULL);
